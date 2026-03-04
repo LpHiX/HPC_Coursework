@@ -16,6 +16,10 @@ extern "C"
         const int &n, 
         double *x, 
         const int &incx);
+    double F77NAME(idamax)(
+        const int &n, 
+        double *x, 
+        const int &incx);
 }
 
 int main(int argc, char* argv[]){
@@ -58,7 +62,7 @@ int main(int argc, char* argv[]){
     double hy = 1.0 / (ny - 1);
     double hz = 1.0 / (nz - 1);
 
-    double* u   = new double[nx * ny * nz];
+    double* u   = new double[nx * ny * nz]();
     double* ddu = new double[(nx-2) * (ny-2) * (nz-2)];
     double* f   = new double[(nx-2) * (ny-2) * (nz-2)];
     double* r   = new double[(nx-2) * (ny-2) * (nz-2)];
@@ -96,9 +100,20 @@ int main(int argc, char* argv[]){
         }
     }
 
+    cout << u[nx * ny * nz - 1] << endl;
+    cout << ddu[0] << endl;
+    cout << ddu[5000] << endl;
+    cout << f[0] << endl;
+    cout << f[5000] << endl;
+    cout << r[0] << endl;
+    cout << r[5000] << endl;
+    int maxarg = F77NAME(idamax)((nx-2) * (ny-2) * (nz-2), r, 1);
+    cout << "Max arg: " << maxarg << endl;
+    cout << "Max r: " << r[maxarg] << endl;
+
     cout << "ddu and r Calculated." << endl;
 
-    cout << "Residual: " << F77NAME(dnrm2)((nx-1) * (ny-1) * (nz-1), r, 1) << endl;
+    cout << "Residual: " << F77NAME(dnrm2)((nx-2) * (ny-2) * (nz-2), r, 1) << endl;
 
     cout << "End of program." << endl;
 
