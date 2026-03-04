@@ -9,6 +9,14 @@ namespace po = boost::program_options;
 
 #include "sayhi.h"
 
+#define F77NAME(x) x##_
+extern "C"
+{
+    double F77NAME(dnrm2)(
+        const int &n, 
+        double *x, 
+        const int &incx);
+}
 
 int main(int argc, char* argv[]){
     po::options_description opts("Availble options");
@@ -32,17 +40,72 @@ int main(int argc, char* argv[]){
     }
 
     string forcing;
-    const int test          = vm["test"].as<int>();
-    const int Nx            = vm["Nx"].as<int>();
-    const int Ny            = vm["Ny"].as<int>();
-    const int Nz            = vm["Nz"].as<int>();
-    const double epsilon    = vm["epsilon"].as<double>();
+
+    // Not implemented yet:
+    [[maybe_unused]] const int test          = vm["test"].as<int>();
+    [[maybe_unused]] const double epsilon    = vm["epsilon"].as<double>();
+
+    const int nx            = vm["Nx"].as<int>();
+    const int ny            = vm["Ny"].as<int>();
+    const int nz            = vm["Nz"].as<int>();
 
     if (vm.count("forcing")){
         forcing = vm["forcing"].as<string>();
     }
+
     
-    cout << test << Nx << Ny << Nz << epsilon << endl;
+    double hx = 1.0 / (nx - 1);
+    double hy = 1.0 / (ny - 1);
+    double hz = 1.0 / (nz - 1);
+
+    double* u   = new double[nx * ny * nz];
+    double* ddu = new double[(nx-2) * (ny-2) * (nz-2)];
+    double* f   = new double[(nx-2) * (ny-2) * (nz-2)];
+    double* r   = new double[(nx-2) * (ny-2) * (nz-2)];
+
+
+    for (int i = 0; i < nx; i++){
+        double x = i * hx;
+        for (int j = 0; j < ny; j++){
+            double y = j * hy;
+            for (int k = 0; k < nz; k++){
+                double z = k * hz;
+                u[(i * ny + j) * nz + k] = x*x + y*y + z*z;
+            }
+        }
+    }
+    cout << "Initialization Complete." << endl;
+
+    for (int i = 1; i < nx-1; i++){
+        for (int j = 1; j < ny-1; j++){
+            for (int k = 1; k < nz-1; k++){
+                int reduced_index = ((i-1) * (ny-2) + j-1) * (nz-2) + k - 1;
+                f[reduced_index] = 6;
+                ddu[reduced_index] =(
+                    +     (u[((i + 1) * ny + (j    )) * nz + (k    )])
+                    - 2 * (u[((i    ) * ny + (j    )) * nz + (k    )])
+                    +     (u[((i - 1) * ny + (j    )) * nz + (k    )])) / (hx*hx) + (
+                    +     (u[((i    ) * ny + (j + 1)) * nz + (k    )])
+                    - 2 * (u[((i    ) * ny + (j    )) * nz + (k    )])
+                    +     (u[((i    ) * ny + (j - 1)) * nz + (k    )])) / (hy*hy) + (
+                    +     (u[((i    ) * ny + (j    )) * nz + (k + 1)])
+                    - 2 * (u[((i    ) * ny + (j    )) * nz + (k    )])
+                    +     (u[((i    ) * ny + (j    )) * nz + (k - 1)])) / (hz*hz);
+                r[reduced_index] = f[reduced_index] - ddu[reduced_index];
+            }
+        }
+    }
+
+    cout << "ddu and r Calculated." << endl;
+
+    cout << "Residual: " << F77NAME(dnrm2)((nx-1) * (ny-1) * (nz-1), r, 1) << endl;
+
+    cout << "End of program." << endl;
+
+    delete[] u;
+    delete[] ddu;
+    delete[] f;
+    delete[] r;
 
     sayHi();
     return 0;
