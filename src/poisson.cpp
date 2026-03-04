@@ -30,7 +30,19 @@ int main(int argc, char* argv[]){
         cout << opts << endl;
         return 1;
     }
-        
+
+    string forcing;
+    const int test          = vm["test"].as<int>();
+    const int Nx            = vm["Nx"].as<int>();
+    const int Ny            = vm["Ny"].as<int>();
+    const int Nz            = vm["Nz"].as<int>();
+    const double epsilon    = vm["epsilon"].as<double>();
+
+    if (vm.count("forcing")){
+        forcing = vm["forcing"].as<string>();
+    }
+    
+    cout << test << Nx << Ny << Nz << epsilon << endl;
 
     sayHi();
     return 0;
