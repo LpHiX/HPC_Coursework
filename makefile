@@ -2,7 +2,7 @@
 
 CXX = g++
 CXXFLAGS = -Werror -Wall -O2 -ftree-vectorize -I$(SRCDIR)
-LIBS = -llapack -lblas
+LIBS = -llapack -lblas -lboost_program_options
 SRCDIR = ./src
 TARGET = poisson
 
@@ -18,15 +18,15 @@ $(SRCDIR)/%.o : $(SRCDIR)/%.cpp $(HDRS)
 
 # Links
 $(TARGET) :$(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ 
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
 	
 run: $(TARGET)
 	@echo "\033[0;32mRunning Poisson \033[0m"
 	./$(TARGET)
 
 clean:
-	rm -f $(SRCDIR)/*.o $(TARGET)
+	rm -f $(SRCDIR)/*.o 
 	
-docs:
+doc:
 	doxygen Doxyfile
 	@echo "\033[0;34mDocumentation generated in /docs folder.\033[0m"
