@@ -1,25 +1,31 @@
 .PHONY : default run clean docs
 
 CXX = g++
-CXXFLAGS = -Werror -Wall -O2 -ftree-vectorize
+CXXFLAGS = -Werror -Wall -O2 -ftree-vectorize -I$(SRCDIR)
 LIBS = -llapack -lblas
-srcdir = ./src
+SRCDIR = ./src
+TARGET = poisson
+
+SOURCES = $(wildcard $(SRCDIR)/*.cpp) 
+OBJS = $(SOURCES:.cpp=.o)
+HDRS = $(wildcard $(SRCDIR)/*.h)
 
 default: run clean
 
-%.o : %.cpp
-	$(CXX) $(CXXFLAGS) -o $@ $<
+# Compiles all .cpp to .o
+$(SRCDIR)/%.o : $(SRCDIR)/%.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -o $@ -c $< 
 
-poisson : $(srcdir)/poisson.cpp
-	$(CXX) $(CXXFLAGS) -o $@ $<
+# Links
+$(TARGET) :$(OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ 
 	
-
-run: poisson
+run: $(TARGET)
 	@echo "\033[0;32mRunning Poisson \033[0m"
-	./poisson
+	./$(TARGET)
 
 clean:
-	rm -f poisson
+	rm -f $(SRCDIR)/*.o $(TARGET)
 	
 docs:
 	doxygen Doxyfile
