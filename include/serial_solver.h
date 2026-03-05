@@ -14,15 +14,17 @@ public:
     ~SerialSolver();
 
     const double* get_u() const { return u; }
+    const double* get_u2() const { return u2; }
     const double* get_ddu() const { return ddu; }
     const double* get_f() const { return f; }
     const double* get_r() const { return r; }
     double get_residual();
     int run_solver();
+    int uIndex(int i,int j, int k);
+    int u2rIndex(int i,int j, int k);
 private:
     double *u, *u2, *ddu, *f, *r;
     void initialize_test(int test);
-    int uIndex(int i,int j, int k);
-    int u2rIndex(int i,int j, int k);
+
 
 };
