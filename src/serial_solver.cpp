@@ -19,18 +19,21 @@ extern "C"
 }
 
 SerialSolver::SerialSolver(int Nx, int Ny, int Nz, int test, double epsilon): 
-    Nx(Nx), Ny(Ny), Nz(Nz), test(test), epsilon(epsilon)
+    Nx(Nx),
+    Ny(Ny),
+    Nz(Nz),
+    nx(Nx - 2),
+    ny(Ny - 2),
+    nz(Nz - 2),
+    test(test),
+    epsilon(epsilon),
+    hx(1.0 / (Nx - 1)),
+    hy(1.0 / (Ny - 1)),
+    hz(1.0 / (Nz - 1)),
+    hx2(1/(hx*hx)),
+    hy2(1/(hy*hy)),
+    hz2(1/(hz*hz))
     {
-        nx = Nx - 2;
-        ny = Ny - 2;
-        nz = Nz - 2;
-        hx = 1.0 / (Nx - 1);
-        hy = 1.0 / (Ny - 1);
-        hz = 1.0 / (Nz - 1);
-        hx2 = 1/(hx*hx);
-        hy2 = 1/(hy*hy);
-        hz2 = 1/(hz*hz);
-
         u   = new double[Nx * Ny * Nz];
         ddu = new double[nx * ny * nz];
         f   = new double[nx * ny * nz];
@@ -68,25 +71,7 @@ double SerialSolver::run_solver(){
             }
         }
     }
-
-    std::cout << u[Nx * Ny * Nz - 1] << std::endl;
-    std::cout << ddu[0] << std::endl;
-    std::cout << ddu[5000] << std::endl;
-    std::cout << f[0] << std::endl;
-    std::cout << f[5000] << std::endl;
-    std::cout << r[0] << std::endl;
-    std::cout << r[5000] << std::endl;
-    int maxarg = F77NAME(idamax)(nx * ny * nz, r, 1);
-    std::cout << "Max arg: " << maxarg << std::endl;
-    std::cout << "Max r: " << r[maxarg] << std::endl;
-
-    double residual = F77NAME(dnrm2)(nx * ny * nz, r, 1);
-    std::cout << "Residual: " << residual << std::endl;
-
-    delete[] u;
-    delete[] ddu;
-    delete[] f;
-    delete[] r;
+    residual = F77NAME(dnrm2)(nx * ny * nz, r, 1);
 
     return residual;
 }
@@ -102,4 +87,11 @@ void SerialSolver::initialize_test_1(){
             }
         }
     }
+}
+
+SerialSolver::~SerialSolver(){
+    delete[] u;
+    delete[] ddu;
+    delete[] f;
+    delete[] r;
 }

@@ -3,12 +3,11 @@
  * @author Martin Leung
  */
 #include <iostream>
+#include <string>
 #include <boost/program_options.hpp>
-using namespace std;
 namespace po = boost::program_options;
 
 #include "serial_solver.h"
-#include "sayhi.h"
 
 
 
@@ -16,7 +15,7 @@ int main(int argc, char* argv[]){
     po::options_description opts("Availble options");
     opts.add_options()
         ("help", "Print available options")
-        ("forcing", po::value<string>(), "Input forcing file")
+        ("forcing", po::value<std::string>(), "Input forcing file")
         ("test", po::value<int>()->default_value(1), "Test case to use (1-5)")
         ("Nx", po::value<int>()->default_value(32), "Number of grid points (x)")
         ("Ny", po::value<int>()->default_value(32), "Number of grid points (y)")
@@ -29,11 +28,11 @@ int main(int argc, char* argv[]){
     po::notify(vm);
 
     if (vm.count("help")) {
-        cout << opts << endl;
+        std::cout << opts << std::endl;
         return 1;
     }
 
-    string forcing;
+    std::string forcing;
 
     // Not implemented yet:
     const int test          = vm["test"].as<int>();
@@ -44,13 +43,12 @@ int main(int argc, char* argv[]){
     const int Nz            = vm["Nz"].as<int>();
 
     if (vm.count("forcing")){
-        forcing = vm["forcing"].as<string>();
+        forcing = vm["forcing"].as<std::string>();
     }
 
     
     SerialSolver ss = SerialSolver(Nx, Ny, Nz, test, epsilon);
-    ss.run_solver();
-    sayHi();
+    std::cout << "Residual: " << ss.run_solver() << std::endl;
     return 0;
 }
 
