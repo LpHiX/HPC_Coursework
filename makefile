@@ -1,13 +1,19 @@
-.PHONY : default run clean doc debug
+.PHONY : default run clean doc debug test
 
 CXX = g++
 CXXFLAGS = -Werror -Wall -O2 -ftree-vectorize -I$(SRCDIR)
 LIBS = -llapack -lblas -lboost_program_options
-SRCDIR = ./src
 TARGET = poisson
 
-SOURCES = $(wildcard $(SRCDIR)/*.cpp) 
-OBJS = $(SOURCES:.cpp=.o)
+SRCDIR = ./src
+BUILDDIR = ./build
+TESTDIR = ./tests
+
+SRCS = $(wildcard $(SRCDIR)/*.cpp) 
+TEST_SRCS = $(wildcard $(TESTDIR)/*.cpp) 
+
+OBJS = $($patsubst $(SRCDIR)/*.cpp, $(BUILDDIR)/%.o, $(SRCS))
+TEST_OBJS = $($patsubst $(SRCDIR)/*.cpp, $(BUILDDIR)/%.o, $(SRCS))
 HDRS = $(wildcard $(SRCDIR)/*.h)
 
 default: run
