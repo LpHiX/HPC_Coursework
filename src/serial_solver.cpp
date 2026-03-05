@@ -19,7 +19,7 @@ extern "C"
         const int &incx);
 }
 
-SerialSolver::SerialSolver(int Nx, int Ny, int Nz, int test, double epsilon): 
+SerialSolver::SerialSolver(int Nx, int Ny, int Nz, int test, double epsilon, double* f_input): 
     Nx(Nx),
     Ny(Ny),
     Nz(Nz),
@@ -40,11 +40,17 @@ SerialSolver::SerialSolver(int Nx, int Ny, int Nz, int test, double epsilon):
         u   = new double[Nx * Ny * Nz]();
         u2  = new double[Nx * Ny * Nz]();
         ddu = new double[nx * ny * nz];
-        f   = new double[nx * ny * nz];
         r   = new double[nx * ny * nz];
+
+        if (f_input == nullptr){
+            f = new double[nx * ny * nz];
+        } else {
+            f = f_input;
+        }
         
         initialize_test(test);
     }
+    
 
 int SerialSolver::uIndex(int i, int j, int k){
     return (i * Ny + j) * Nz + k;
@@ -108,6 +114,8 @@ double SerialSolver::get_residual(){
 
 void SerialSolver::initialize_test(int test){
     switch (test ) {
+        case 0:
+            break;
         case 1:
             for (int i = 0; i < Nx; i++){
                 double x = i * hx;

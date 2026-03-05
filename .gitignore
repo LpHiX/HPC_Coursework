@@ -42,3 +42,5 @@
 
 # Doxygen folder
 /docs
+
+*.txt

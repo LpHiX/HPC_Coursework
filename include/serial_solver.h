@@ -9,7 +9,7 @@ public:
     const int Nx, Ny, Nz, nx, ny, nz, test, max_iter;
     const double epsilon, hx, hy, hz, hx2, hy2, hz2, j_coeff;
     
-    SerialSolver(int Nx, int Ny, int Nz, int test, double epsilon);
+    SerialSolver(int Nx, int Ny, int Nz, int test, double epsilon, double* f_input = nullptr);
     SerialSolver() = delete;
     ~SerialSolver();
 

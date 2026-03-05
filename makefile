@@ -7,8 +7,9 @@ TESTDIR = tests
 
 
 CXX = g++
-CXXFLAGS = -Werror -Wall -ftree-vectorize -I $(INCDIR)
-LIBS = -llapack -lblas -lboost_program_options
+CXXFLAGS = -O2 -Werror -Wall -ftree-vectorize -I $(INCDIR)
+# LIBS = -llapack -lblas -lboost_program_options 
+LIBS = -lboost_timer -lboost_chrono -lboost_system -lboost_program_options -llapack -lblas -lrt
 TARGET = poisson
 TEST_TARGET = run_tests
 
@@ -29,6 +30,7 @@ default: run
 # default: run test
 
 debug: CXXFLAGS = -g -O0 -Wall -Werror -I$(INCDIR)
+test: CXXFLAGS =  -O0 -Wall -Werror -ftree-vectorize -I$(INCDIR)
 debug: clean $(TARGET)
 
 $(BUILDDIR):
@@ -36,17 +38,17 @@ $(BUILDDIR):
 
 # Compiles all .cpp to .o
 $(BUILDDIR)/%.o : $(SRCDIR)/%.cpp | $(BUILDDIR)
-	$(CXX) $(CXXFLAGS) -O2 -o $@ -c $< 
+	$(CXX) $(CXXFLAGS) -o $@ -c $< 
 
 $(BUILDDIR)/%.o : $(TESTDIR)/%.cpp | $(BUILDDIR)
-	$(CXX) $(CXXFLAGS) -O0 -o $@ -c $< 
+	$(CXX) $(CXXFLAGS) -o $@ -c $< 
 
 # Links
 $(TARGET) : $(MAIN_OBJ) $(SHARED_OBJS)
-	$(CXX) $(CXXFLAGS) -O2 -o $@ $^ $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
 
 $(TEST_TARGET) : $(TEST_OBJS) $(SHARED_OBJS)
-	$(CXX) $(CXXFLAGS) -O0 -o $@ $^ $(LIBS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
 
 run: $(TARGET)
 	@echo "\033[0;32mRunning Poisson \033[0m"
