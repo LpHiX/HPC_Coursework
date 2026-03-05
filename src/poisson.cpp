@@ -49,71 +49,74 @@ int main(int argc, char* argv[]){
     [[maybe_unused]] const int test          = vm["test"].as<int>();
     [[maybe_unused]] const double epsilon    = vm["epsilon"].as<double>();
 
-    const int nx            = vm["Nx"].as<int>();
-    const int ny            = vm["Ny"].as<int>();
-    const int nz            = vm["Nz"].as<int>();
+    const int Nx            = vm["Nx"].as<int>();
+    const int Ny            = vm["Ny"].as<int>();
+    const int Nz            = vm["Nz"].as<int>();
+    const int nx = Nx - 2;
+    const int ny = Ny - 2;
+    const int nz = Nz - 2;
 
     if (vm.count("forcing")){
         forcing = vm["forcing"].as<string>();
     }
 
     
-    double hx = 1.0 / (nx - 1);
-    double hy = 1.0 / (ny - 1);
-    double hz = 1.0 / (nz - 1);
+    double hx = 1.0 / (Nx - 1);
+    double hy = 1.0 / (Ny - 1);
+    double hz = 1.0 / (Nz - 1);
 
-    double* u   = new double[nx * ny * nz]();
-    double* ddu = new double[(nx-2) * (ny-2) * (nz-2)];
-    double* f   = new double[(nx-2) * (ny-2) * (nz-2)];
-    double* r   = new double[(nx-2) * (ny-2) * (nz-2)];
+    double* u   = new double[nx * ny * nz];
+    double* ddu = new double[nx * ny * nz];
+    double* f   = new double[nx * ny * nz];
+    double* r   = new double[nx * ny * nz];
 
 
-    for (int i = 0; i < nx; i++){
+    for (int i = 0; i < Nx; i++){
         double x = i * hx;
-        for (int j = 0; j < ny; j++){
+        for (int j = 0; j < Ny; j++){
             double y = j * hy;
-            for (int k = 0; k < nz; k++){
+            for (int k = 0; k < Nz; k++){
                 double z = k * hz;
-                u[(i * ny + j) * nz + k] = x*x + y*y + z*z;
+                u[(i * Nx + j) * Ny + k] = x*x + y*y + z*z;
             }
         }
     }
     cout << "Initialization Complete." << endl;
 
-    for (int i = 1; i < nx-1; i++){
-        for (int j = 1; j < ny-1; j++){
-            for (int k = 1; k < nz-1; k++){
-                int reduced_index = ((i-1) * (ny-2) + j-1) * (nz-2) + k - 1;
+    for (int i = 1; i < Nx-1; i++){
+        for (int j = 1; j < Ny-1; j++){
+            for (int k = 1; k < Nz-1; k++){
+                int reduced_index = ((i - 1) * nx + (j - 1)) * ny + (k - 1);
                 f[reduced_index] = 6;
                 ddu[reduced_index] =(
-                    +     (u[((i + 1) * ny + (j    )) * nz + (k    )])
-                    - 2 * (u[((i    ) * ny + (j    )) * nz + (k    )])
-                    +     (u[((i - 1) * ny + (j    )) * nz + (k    )])) / (hx*hx) + (
-                    +     (u[((i    ) * ny + (j + 1)) * nz + (k    )])
-                    - 2 * (u[((i    ) * ny + (j    )) * nz + (k    )])
-                    +     (u[((i    ) * ny + (j - 1)) * nz + (k    )])) / (hy*hy) + (
-                    +     (u[((i    ) * ny + (j    )) * nz + (k + 1)])
-                    - 2 * (u[((i    ) * ny + (j    )) * nz + (k    )])
-                    +     (u[((i    ) * ny + (j    )) * nz + (k - 1)])) / (hz*hz);
+                    +     (u[((i + 1) * Nx + (j    )) * Ny + (k    )])
+                    - 2 * (u[((i    ) * Nx + (j    )) * Ny + (k    )])
+                    +     (u[((i - 1) * Nx + (j    )) * Ny + (k    )])) / (hx*hx) + (
+                    +     (u[((i    ) * Nx + (j + 1)) * Ny + (k    )])
+                    - 2 * (u[((i    ) * Nx + (j    )) * Ny + (k    )])
+                    +     (u[((i    ) * Nx + (j - 1)) * Ny + (k    )])) / (hy*hy) + (
+                    +     (u[((i    ) * Nx + (j    )) * Ny + (k + 1)])
+                    - 2 * (u[((i    ) * Nx + (j    )) * Ny + (k    )])
+                    +     (u[((i    ) * Nx + (j    )) * Ny + (k - 1)])) / (hz*hz);
                 r[reduced_index] = f[reduced_index] - ddu[reduced_index];
             }
         }
     }
 
-    cout << u[nx * ny * nz - 1] << endl;
-    cout << ddu[0] << endl;
-    cout << ddu[5000] << endl;
-    cout << f[0] << endl;
-    cout << f[5000] << endl;
-    cout << r[0] << endl;
-    cout << r[5000] << endl;
-    int maxarg = F77NAME(idamax)((nx-2) * (ny-2) * (nz-2), r, 1);
-    cout << "Max arg: " << maxarg << endl;
-    cout << "Max r: " << r[maxarg] << endl;
+    // cout << u[nx * ny * nz - 1] << endl;
+    // cout << ddu[0] << endl;
+    // cout << ddu[5000] << endl;
+    // cout << f[0] << endl;
+    // cout << f[5000] << endl;
+    // cout << r[0] << endl;
+    // cout << r[5000] << endl;
+    // int maxarg = F77NAME(idamax)((nx-2) * (ny-2) * (nz-2), r, 1);
+    // cout << "Max arg: " << maxarg << endl;
+    // cout << "Max r: " << r[maxarg] << endl;
 
     cout << "ddu and r Calculated." << endl;
 
-    cout << "Residual: " << F77NAME(dnrm2)((nx-2) * (ny-2) * (nz-2), r, 1) << endl;
+    cout << "Residual: " << F77NAME(dnrm2)(nx * ny * nz - 1, r, 1) << endl;
 
     cout << "End of program." << endl;
 
