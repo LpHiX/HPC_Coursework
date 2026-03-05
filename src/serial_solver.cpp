@@ -1,0 +1,100 @@
+/**
+ * @file serial_solver.cpp
+ * @author Martin Leung
+ */
+#include <iostream>
+#include "serial_solver.h"
+
+#define F77NAME(x) x##_
+extern "C"
+{
+    double F77NAME(dnrm2)(
+        const int &n, 
+        double *x, 
+        const int &incx);
+    double F77NAME(idamax)(
+        const int &n, 
+        double *x, 
+        const int &incx);
+}
+
+SerialSolver::SerialSolver(int Nx, int Ny, int Nz, int test, double epsilon): 
+        Nx(Nx), Ny(Ny), Nz(Nz), test(test), epsilon(epsilon)
+        {
+            nx = Nx - 2;
+            ny = Ny - 2;
+            nz = Nz - 2;
+            hx = 1.0 / (Nx - 1);
+            hy = 1.0 / (Ny - 1);
+            hz = 1.0 / (Nz - 1);
+            hx2 = 1/(hx*hx);
+            hy2 = 1/(hy*hy);
+            hz2 = 1/(hz*hz);
+
+            u   = new double[Nx * Ny * Nz];
+            ddu = new double[nx * ny * nz];
+            f   = new double[nx * ny * nz];
+            r   = new double[nx * ny * nz];
+            
+            if (test == 1){
+                initialize_test_1();
+            }
+        }
+
+void SerialSolver::run_solver(){
+        for (int i = 1; i < Nx-1; i++){
+            for (int j = 1; j < Ny-1; j++){
+                for (int k = 1; k < Nz-1; k++){
+                    int reduced_index = ((i - 1) * nx + (j - 1)) * ny + (k - 1);
+                    f[reduced_index] = 6;
+                    ddu[reduced_index] =(
+                        +     (u[((i + 1) * Nx + (j    )) * Ny + (k    )])
+                        - 2 * (u[((i    ) * Nx + (j    )) * Ny + (k    )])
+                        +     (u[((i - 1) * Nx + (j    )) * Ny + (k    )])) * hx2 + (
+                        +     (u[((i    ) * Nx + (j + 1)) * Ny + (k    )])
+                        - 2 * (u[((i    ) * Nx + (j    )) * Ny + (k    )])
+                        +     (u[((i    ) * Nx + (j - 1)) * Ny + (k    )])) * hy2 + (
+                        +     (u[((i    ) * Nx + (j    )) * Ny + (k + 1)])
+                        - 2 * (u[((i    ) * Nx + (j    )) * Ny + (k    )])
+                        +     (u[((i    ) * Nx + (j    )) * Ny + (k - 1)])) * hz2;
+                    r[reduced_index] = f[reduced_index] - ddu[reduced_index];
+                }
+            }
+        }
+
+        // std::cout << u[nx * ny * nz - 1] << std::endl;
+        // std::cout << ddu[0] << std::endl;
+        // std::cout << ddu[5000] << std::endl;
+        // std::cout << f[0] << std::endl;
+        // std::cout << f[5000] << std::endl;
+        // std::cout << r[0] << std::endl;
+        // std::cout << r[5000] << std::endl;
+        // int maxarg = F77NAME(idamax)((nx-2) * (ny-2) * (nz-2), r, 1);
+        // std::cout << "Max arg: " << maxarg << std::endl;
+        // std::cout << "Max r: " << r[maxarg] << std::endl;
+
+        std::cout << "ddu and r Calculated." << std::endl;
+
+        std::cout << "Residual: " << F77NAME(dnrm2)(nx * ny * nz - 1, r, 1) << std::endl;
+
+        std::cout << "End of program." << std::endl;
+
+        delete[] u;
+        delete[] ddu;
+        delete[] f;
+        delete[] r;
+    }
+
+    void SerialSolver::initialize_test_1(){
+    for (int i = 0; i < Nx; i++){
+        double x = i * hx;
+        for (int j = 0; j < Ny; j++){
+            double y = j * hy;
+            for (int k = 0; k < Nz; k++){
+                double z = k * hz;
+                u[(i * Nx + j) * Ny + k] = x*x + y*y + z*z;
+            }
+        }
+    }
+    std::cout << "Initialization Complete." << std::endl;
+}
