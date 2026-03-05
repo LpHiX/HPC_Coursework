@@ -41,44 +41,47 @@ SerialSolver::SerialSolver(int Nx, int Ny, int Nz, int test, double epsilon):
         }
     }
 
+int SerialSolver::uIndex(int i, int j, int k){
+    return (i * Ny + j) * Nz + k;
+}
+int SerialSolver::u2rIndex(int i, int j, int k){
+    return ((i-1) * ny + (j-1)) * nz + (k-1);
+}
+
 double SerialSolver::run_solver(){
     for (int i = 1; i < Nx-1; i++){
         for (int j = 1; j < Ny-1; j++){
             for (int k = 1; k < Nz-1; k++){
-                int reduced_index = ((i - 1) * nx + (j - 1)) * ny + (k - 1);
+                int reduced_index = u2rIndex(i, j, k);
                 f[reduced_index] = 6;
                 ddu[reduced_index] =(
-                    +     (u[((i + 1) * Nx + (j    )) * Ny + (k    )])
-                    - 2 * (u[((i    ) * Nx + (j    )) * Ny + (k    )])
-                    +     (u[((i - 1) * Nx + (j    )) * Ny + (k    )])) * hx2 + (
-                    +     (u[((i    ) * Nx + (j + 1)) * Ny + (k    )])
-                    - 2 * (u[((i    ) * Nx + (j    )) * Ny + (k    )])
-                    +     (u[((i    ) * Nx + (j - 1)) * Ny + (k    )])) * hy2 + (
-                    +     (u[((i    ) * Nx + (j    )) * Ny + (k + 1)])
-                    - 2 * (u[((i    ) * Nx + (j    )) * Ny + (k    )])
-                    +     (u[((i    ) * Nx + (j    )) * Ny + (k - 1)])) * hz2;
+                    +     u[uIndex(i + 1, j    , k    )]
+                    - 2 * u[uIndex(i    , j    , k    )]
+                    +     u[uIndex(i - 1, j    , k    )]) * hx2 + (
+                    +     u[uIndex(i    , j + 1, k    )]
+                    - 2 * u[uIndex(i    , j    , k    )]
+                    +     u[uIndex(i    , j - 1, k    )]) * hy2 + (
+                    +     u[uIndex(i    , j    , k + 1)]
+                    - 2 * u[uIndex(i    , j    , k    )]
+                    +     u[uIndex(i    , j    , k - 1)]) * hz2;
                 r[reduced_index] = f[reduced_index] - ddu[reduced_index];
             }
         }
     }
 
-    // std::cout << u[nx * ny * nz - 1] << std::endl;
-    // std::cout << ddu[0] << std::endl;
-    // std::cout << ddu[5000] << std::endl;
-    // std::cout << f[0] << std::endl;
-    // std::cout << f[5000] << std::endl;
-    // std::cout << r[0] << std::endl;
-    // std::cout << r[5000] << std::endl;
-    // int maxarg = F77NAME(idamax)((nx-2) * (ny-2) * (nz-2), r, 1);
-    // std::cout << "Max arg: " << maxarg << std::endl;
-    // std::cout << "Max r: " << r[maxarg] << std::endl;
+    std::cout << u[Nx * Ny * Nz - 1] << std::endl;
+    std::cout << ddu[0] << std::endl;
+    std::cout << ddu[5000] << std::endl;
+    std::cout << f[0] << std::endl;
+    std::cout << f[5000] << std::endl;
+    std::cout << r[0] << std::endl;
+    std::cout << r[5000] << std::endl;
+    int maxarg = F77NAME(idamax)(nx * ny * nz, r, 1);
+    std::cout << "Max arg: " << maxarg << std::endl;
+    std::cout << "Max r: " << r[maxarg] << std::endl;
 
-    double residual = F77NAME(dnrm2)(nx * ny * nz - 1, r, 1);
-    std::cout << "ddu and r Calculated." << std::endl;
-
+    double residual = F77NAME(dnrm2)(nx * ny * nz, r, 1);
     std::cout << "Residual: " << residual << std::endl;
-
-    std::cout << "End of program." << std::endl;
 
     delete[] u;
     delete[] ddu;
@@ -95,9 +98,8 @@ void SerialSolver::initialize_test_1(){
             double y = j * hy;
             for (int k = 0; k < Nz; k++){
                 double z = k * hz;
-                u[(i * Nx + j) * Ny + k] = x*x + y*y + z*z;
+                u[uIndex(i, j, k)] = x*x + y*y + z*z;
             }
         }
     }
-    std::cout << "Initialization Complete." << std::endl;
 }
