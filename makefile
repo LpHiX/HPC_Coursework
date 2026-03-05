@@ -1,35 +1,62 @@
-.PHONY : default run clean doc debug
+.PHONY : default run clean doc debug test
+
+INCDIR = include
+SRCDIR = src
+BUILDDIR = build
+TESTDIR = tests
+
 
 CXX = g++
-CXXFLAGS = -Werror -Wall -O2 -ftree-vectorize -I$(SRCDIR)
+CXXFLAGS = -Werror -Wall -ftree-vectorize -I $(INCDIR)
 LIBS = -llapack -lblas -lboost_program_options
-SRCDIR = ./src
 TARGET = poisson
+TEST_TARGET = run_tests
 
-SOURCES = $(wildcard $(SRCDIR)/*.cpp) 
-OBJS = $(SOURCES:.cpp=.o)
-HDRS = $(wildcard $(SRCDIR)/*.h)
 
-default: run
 
-debug: CXXFLAGS = -g -O0 -Wall -Werror -I$(SRCDIR)
+SRCS = $(wildcard $(SRCDIR)/*.cpp) 
+TEST_SRCS = $(wildcard $(TESTDIR)/*.cpp) 
+
+# HDRS = $(wildcard $(INCDIR)/*.h)
+
+OBJS = $(patsubst $(SRCDIR)/%.cpp, $(BUILDDIR)/%.o, $(SRCS))
+TEST_OBJS = $(patsubst $(TESTDIR)/%.cpp, $(BUILDDIR)/%.o, $(TEST_SRCS))
+
+MAIN_OBJ = $(BUILDDIR)/$(TARGET).o
+SHARED_OBJS = $(filter-out $(MAIN_OBJ), $(OBJS))
+
+default: run test
+
+debug: CXXFLAGS = -g -O0 -Wall -Werror -I$(INCDIR)
 debug: clean $(TARGET)
 
+$(BUILDDIR):
+	mkdir -p $@
+
 # Compiles all .cpp to .o
-$(SRCDIR)/%.o : $(SRCDIR)/%.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -o $@ -c $< 
+$(BUILDDIR)/%.o : $(SRCDIR)/%.cpp | $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) -O2 -o $@ -c $< 
+
+$(BUILDDIR)/%.o : $(TESTDIR)/%.cpp | $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) -O0 -o $@ -c $< 
 
 # Links
-$(TARGET) : $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
-	rm -f $(SRCDIR)/*.o 
-	
+$(TARGET) : $(MAIN_OBJ) $(SHARED_OBJS)
+	$(CXX) $(CXXFLAGS) -O2 -o $@ $^ $(LIBS)
+
+$(TEST_TARGET) : $(TEST_OBJS) $(SHARED_OBJS)
+	$(CXX) $(CXXFLAGS) -O0 -o $@ $^ $(LIBS)
+
 run: $(TARGET)
 	@echo "\033[0;32mRunning Poisson \033[0m"
 	./$(TARGET)
 
+test: $(TEST_TARGET)
+	@echo "\033[0;32mRunning Tests \033[0m"
+	./$(TEST_TARGET)
+
 clean:
-	rm -f $(SRCDIR)/*.o 
+	rm -rf $(BUILDDIR) $(TARGET) $(TEST_TARGET)
 
 doc:
 	doxygen Doxyfile

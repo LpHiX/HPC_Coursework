@@ -7,7 +7,7 @@
 class SerialSolver{
 public:
     SerialSolver(int Nx, int Ny, int Nz, int test, double epsilon);
-    void run_solver();
+    double run_solver();
 private:
     int Nx, Ny, Nz, nx, ny, nz, test;
     double epsilon, hx, hy, hz, hx2, hy2, hz2;
