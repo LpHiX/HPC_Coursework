@@ -7,7 +7,7 @@ TESTDIR = tests
 
 
 CXX = g++
-CXXFLAGS = -Werror -Wall -O2 -ftree-vectorize -I $(INCDIR)
+CXXFLAGS = -Werror -Wall -ftree-vectorize -I $(INCDIR)
 LIBS = -llapack -lblas -lboost_program_options
 TARGET = poisson
 TEST_TARGET = run_tests
@@ -25,7 +25,7 @@ TEST_OBJS = $(patsubst $(TESTDIR)/%.cpp, $(BUILDDIR)/%.o, $(TEST_SRCS))
 MAIN_OBJ = $(BUILDDIR)/$(TARGET).o
 SHARED_OBJS = $(filter-out $(MAIN_OBJ), $(OBJS))
 
-default: run
+default: run test
 
 debug: CXXFLAGS = -g -O0 -Wall -Werror -I$(INCDIR)
 debug: clean $(TARGET)
@@ -35,24 +35,28 @@ $(BUILDDIR):
 
 # Compiles all .cpp to .o
 $(BUILDDIR)/%.o : $(SRCDIR)/%.cpp | $(BUILDDIR)
-	$(CXX) $(CXXFLAGS) -o $@ -c $< 
+	$(CXX) $(CXXFLAGS) -O2 -o $@ -c $< 
 
 $(BUILDDIR)/%.o : $(TESTDIR)/%.cpp | $(BUILDDIR)
-	$(CXX) $(CXXFLAGS) -o $@ -c $< 
+	$(CXX) $(CXXFLAGS) -O0 -o $@ -c $< 
 
 # Links
 $(TARGET) : $(MAIN_OBJ) $(SHARED_OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+	$(CXX) $(CXXFLAGS) -O2 -o $@ $^ $(LIBS)
 
 $(TEST_TARGET) : $(TEST_OBJS) $(SHARED_OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+	$(CXX) $(CXXFLAGS) -O0 -o $@ $^ $(LIBS)
 
 run: $(TARGET)
 	@echo "\033[0;32mRunning Poisson \033[0m"
 	./$(TARGET)
 
+test: $(TEST_TARGET)
+	@echo "\033[0;32mRunning Tests \033[0m"
+	./$(TEST_TARGET)
+
 clean:
-	rm -f $(SRCDIR)/*.o 
+	rm -rf $(BUILDDIR) $(TARGET) $(TEST_TARGET)
 
 doc:
 	doxygen Doxyfile
