@@ -25,7 +25,8 @@ TEST_OBJS = $(patsubst $(TESTDIR)/%.cpp, $(BUILDDIR)/%.o, $(TEST_SRCS))
 MAIN_OBJ = $(BUILDDIR)/$(TARGET).o
 SHARED_OBJS = $(filter-out $(MAIN_OBJ), $(OBJS))
 
-default: run test
+default: run
+# default: run test
 
 debug: CXXFLAGS = -g -O0 -Wall -Werror -I$(INCDIR)
 debug: clean $(TARGET)

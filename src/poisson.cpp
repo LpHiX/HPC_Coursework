@@ -48,7 +48,8 @@ int main(int argc, char* argv[]){
 
     
     SerialSolver ss = SerialSolver(Nx, Ny, Nz, test, epsilon);
-    std::cout << "Residual: " << ss.run_solver() << std::endl;
+    ss.run_solver();
+    // std::cout << "Residual: " << ss.get_residual() << std::endl;
     return 0;
 }
 
