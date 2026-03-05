@@ -64,8 +64,13 @@ int main(int argc, char* argv[]){
     double hx = 1.0 / (Nx - 1);
     double hy = 1.0 / (Ny - 1);
     double hz = 1.0 / (Nz - 1);
+    double hx2 = 1/(hx*hx);
+    double hy2 = 1/(hy*hy);
+    double hz2 = 1/(hz*hz);
 
-    double* u   = new double[nx * ny * nz];
+
+
+    double* u   = new double[Nx * Ny * Nz];
     double* ddu = new double[nx * ny * nz];
     double* f   = new double[nx * ny * nz];
     double* r   = new double[nx * ny * nz];
@@ -91,13 +96,13 @@ int main(int argc, char* argv[]){
                 ddu[reduced_index] =(
                     +     (u[((i + 1) * Nx + (j    )) * Ny + (k    )])
                     - 2 * (u[((i    ) * Nx + (j    )) * Ny + (k    )])
-                    +     (u[((i - 1) * Nx + (j    )) * Ny + (k    )])) / (hx*hx) + (
+                    +     (u[((i - 1) * Nx + (j    )) * Ny + (k    )])) * hx2 + (
                     +     (u[((i    ) * Nx + (j + 1)) * Ny + (k    )])
                     - 2 * (u[((i    ) * Nx + (j    )) * Ny + (k    )])
-                    +     (u[((i    ) * Nx + (j - 1)) * Ny + (k    )])) / (hy*hy) + (
+                    +     (u[((i    ) * Nx + (j - 1)) * Ny + (k    )])) * hy2 + (
                     +     (u[((i    ) * Nx + (j    )) * Ny + (k + 1)])
                     - 2 * (u[((i    ) * Nx + (j    )) * Ny + (k    )])
-                    +     (u[((i    ) * Nx + (j    )) * Ny + (k - 1)])) / (hz*hz);
+                    +     (u[((i    ) * Nx + (j    )) * Ny + (k - 1)])) * hz2;
                 r[reduced_index] = f[reduced_index] - ddu[reduced_index];
             }
         }
