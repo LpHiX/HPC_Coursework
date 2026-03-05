@@ -46,7 +46,7 @@ void write_sample_forcing(const int Nx, const int Ny, const int Nz, std::string 
             double y = j * hy;
             for (int k = 1; k < Nz-1; k++){
                 double z = k * hz;
-                fileOutput << x << " " << y << " " << z << " " << sin(M_PI * x) * sin(M_PI * y) * sin(M_PI * z) << std::endl;
+                fileOutput << x << " " << y << " " << z << " " << - 3 * M_PI * M_PI * sin(M_PI * x) * sin(M_PI * y) * sin(M_PI * z) << std::endl;
             }
         }
     }

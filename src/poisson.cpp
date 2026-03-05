@@ -56,7 +56,7 @@ int main(int argc, char* argv[]){
         read_forcing(forcing, Nx, Ny, Nz, f);
         test = 0;
     }
-    // write_sample_forcing(32, 32, 32, "testcase2forcing.txt");
+    write_sample_forcing(32, 32, 32, "testcase2forcing.txt");
 
     SerialSolver ss = SerialSolver(Nx, Ny, Nz, test, epsilon, f);
     ss.run_solver();

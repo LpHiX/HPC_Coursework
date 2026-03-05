@@ -7,3 +7,4 @@ Add `-fopt-info-vec-missed` flag when I want to debug vectorization.
 
 # TODO:
 1. make sure both --forcing and --test don't work together
+    1. Addendum, this doesn't work, ask chris cantwell as test has a default value
