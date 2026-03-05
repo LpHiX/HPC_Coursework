@@ -1,35 +1,52 @@
 .PHONY : default run clean doc debug test
 
+INCDIR = include
+SRCDIR = src
+BUILDDIR = build
+TESTDIR = tests
+
+
 CXX = g++
-CXXFLAGS = -Werror -Wall -O2 -ftree-vectorize -I$(SRCDIR)
+CXXFLAGS = -Werror -Wall -O2 -ftree-vectorize -I $(INCDIR)
 LIBS = -llapack -lblas -lboost_program_options
 TARGET = poisson
+TEST_TARGET = run_tests
 
-SRCDIR = ./src
-BUILDDIR = ./build
-TESTDIR = ./tests
+
 
 SRCS = $(wildcard $(SRCDIR)/*.cpp) 
 TEST_SRCS = $(wildcard $(TESTDIR)/*.cpp) 
 
-OBJS = $($patsubst $(SRCDIR)/*.cpp, $(BUILDDIR)/%.o, $(SRCS))
-TEST_OBJS = $($patsubst $(SRCDIR)/*.cpp, $(BUILDDIR)/%.o, $(SRCS))
-HDRS = $(wildcard $(SRCDIR)/*.h)
+# HDRS = $(wildcard $(INCDIR)/*.h)
+
+OBJS = $(patsubst $(SRCDIR)/%.cpp, $(BUILDDIR)/%.o, $(SRCS))
+TEST_OBJS = $(patsubst $(TESTDIR)/%.cpp, $(BUILDDIR)/%.o, $(TEST_SRCS))
+
+MAIN_OBJ = $(BUILDDIR)/$(TARGET).o
+SHARED_OBJS = $(filter-out $(MAIN_OBJ), $(OBJS))
 
 default: run
 
-debug: CXXFLAGS = -g -O0 -Wall -Werror -I$(SRCDIR)
+debug: CXXFLAGS = -g -O0 -Wall -Werror -I$(INCDIR)
 debug: clean $(TARGET)
 
+$(BUILDDIR):
+	mkdir -p $@
+
 # Compiles all .cpp to .o
-$(SRCDIR)/%.o : $(SRCDIR)/%.cpp $(HDRS)
+$(BUILDDIR)/%.o : $(SRCDIR)/%.cpp | $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) -o $@ -c $< 
+
+$(BUILDDIR)/%.o : $(TESTDIR)/%.cpp | $(BUILDDIR)
 	$(CXX) $(CXXFLAGS) -o $@ -c $< 
 
 # Links
-$(TARGET) : $(OBJS)
+$(TARGET) : $(MAIN_OBJ) $(SHARED_OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
-	rm -f $(SRCDIR)/*.o 
-	
+
+$(TEST_TARGET) : $(TEST_OBJS) $(SHARED_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
+
 run: $(TARGET)
 	@echo "\033[0;32mRunning Poisson \033[0m"
 	./$(TARGET)
