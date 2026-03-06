@@ -54,7 +54,7 @@ run: $(TARGET)
 	@echo "\033[0;32mRunning Poisson \033[0m"
 	./$(TARGET)
 
-test: $(TEST_TARGET)
+tests: $(TEST_TARGET)
 	@echo "\033[0;32mRunning Tests \033[0m"
 	./$(TEST_TARGET)
 
@@ -64,3 +64,6 @@ clean:
 doc:
 	doxygen Doxyfile
 	@echo "\033[0;34mDocumentation generated in /docs folder.\033[0m"
+
+cleandoc :
+	rm -rf docs

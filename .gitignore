@@ -44,3 +44,6 @@
 /docs
 
 *.txt
+
+poisson
+run_tests
