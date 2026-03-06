@@ -1,8 +1,8 @@
 /**
- * @file jacobimethods.cpp
+ * @file jacobi_localstate.cpp
  * @author Martin Leung
  */
-#include <jacobimethods.h>
+#include <jacobi_localstate.h>
 #include <cmath>
 /**
  * Math Explanation:
@@ -22,7 +22,7 @@
 
 
 
-JacobiState::JacobiState(int Nx, int Ny, int Nz, double* f): 
+JacobiLocalState::JacobiLocalState(int Nx, int Ny, int Nz, double* f): 
     Nx(Nx),
     Ny(Ny),
     Nz(Nz),
@@ -43,7 +43,7 @@ JacobiState::JacobiState(int Nx, int Ny, int Nz, double* f):
         r   = new double[nx * ny * nz];        
     }
 
-void JacobiState::jacobi_step(){
+void JacobiLocalState::jacobi_step(){
     for (int i = 1; i < Nx-1; i++){
         for (int j = 1; j < Ny-1; j++){
             for (int k = 1; k < Nz-1; k++){
@@ -60,7 +60,7 @@ void JacobiState::jacobi_step(){
     u2 = temp;
 }
 
-double JacobiState::get_residual() const{
+double JacobiLocalState::get_residual() const{
     double sum_residual = 0;
     for (int i = 1; i < Nx-1; i++){
         for (int j = 1; j < Ny-1; j++){
@@ -84,43 +84,61 @@ double JacobiState::get_residual() const{
     return sqrt(sum_residual);
 }
 
-void JacobiState::set_u_boundary(double *plane, Direction plane_dir, bool plane_sign){
-    // X positive -> y,z
-    int offset = (Nx - 1)* Ny * Nz;
-    int M = Ny;
-    int N = Nz;
-    int iMul = Nz;
-    int jMul = 1;
-    for (int im = 0; im < M; im++){
-        for (int jn = 0; jn < N; jn++){
-            // u[offset + im * N + jn] = plane[im * N + jn];
-            u[offset + im * iMul + jn * jMul] = plane[im * N + jn];
-        }
+void JacobiLocalState::get_boundary_constants(Direction plane_dir, bool plane_sign, int &offset, int &M, int &N, int &iMul, int &jMul) const {
+    offset = 0;
+    switch (plane_dir) {
+        case DIR_X:
+            M = Ny;
+            N = Nz;
+            iMul = Nz;
+            jMul = 1;
+            if (plane_sign){offset = (Nx - 1)* Ny * Nz;}
+            break;
+        case DIR_Y:
+            M = Nx;
+            N = Nz;
+            iMul = Ny * Nz;
+            jMul = 1;
+            if (plane_sign){offset = (Ny - 1) * Nz;}
+        case DIR_Z:
+            M = Nx;
+            N = Ny;
+            iMul = Ny * Nz;
+            jMul = Ny;
+            if (plane_sign){offset = Nz - 1;}
+            break;
+        default:
+            throw "Not a possible direction";
     }
+}
 
-    // Y positive -> x,z
-    int offset = (Ny - 1) * Nz;
-    int M = Nx;
-    int N = Nz;
-    int iMul = Ny * Nz;
-    int jMul = 1;
-    for (int im = 0; im < M; im++){
-        for (int jn = 0; jn < N; jn++){
-            // u[offset + (im * Ny) * Nz + jn] = plane[im * N + jn];
-            u[offset + im * iMul + jn * jMul] = plane[im * N + jn];
-        }
-    }
+void JacobiLocalState::set_u_boundary(double *plane, Direction plane_dir, bool plane_sign){
+    int offset, M, N, iMul, jMul;
+    get_boundary_constants(plane_dir, plane_sign, offset, M, N, iMul, jMul);
+    
 
-    // Z positive -> x,y
-    int offset = Nz - 1;
-    int M = Nx;
-    int N = Ny;
-    int iMul = Ny * Nz;
-    int jMul = Ny;
     for (int im = 0; im < M; im++){
         for (int jn = 0; jn < N; jn++){
-            // u[offset + (im * Ny) * Nz + jn] = plane[im * N + jn];
             u[offset + im * iMul + jn * jMul] = plane[im * N + jn];
         }
     }
+}
+
+void JacobiLocalState::get_u_boundary(double *&plane, Direction plane_dir, bool plane_sign) const{
+    int offset, M, N, iMul, jMul;
+    get_boundary_constants(plane_dir, plane_sign, offset, M, N, iMul, jMul);
+    
+    for (int im = 0; im < M; im++){
+        for (int jn = 0; jn < N; jn++){
+            plane[im * N + jn] = u[offset + im * iMul + jn * jMul];
+        }
+    }
+}
+
+JacobiLocalState::~JacobiLocalState(){
+    delete[] u;
+    delete[] u2;
+    delete[] ddu;
+    delete[] f;
+    delete[] r;
 }
