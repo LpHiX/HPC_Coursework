@@ -20,8 +20,13 @@ public:
     const double* get_r() const { return r; }
     double get_residual();
     int run_solver();
-    int uIndex(int i,int j, int k);
-    int u2rIndex(int i,int j, int k);
+    inline int uIndex(int i, int j, int k) const {
+        return (i * Ny + j) * Nz + k;
+    }
+
+    inline int u2rIndex(int i, int j, int k) const {
+        return ((i-1) * ny + (j-1)) * nz + (k-1);
+    }
 private:
     double *u, *u2, *ddu, *f, *r;
     void initialize_test(int test);

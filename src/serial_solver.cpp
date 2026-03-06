@@ -52,12 +52,6 @@ SerialSolver::SerialSolver(int Nx, int Ny, int Nz, int test, double epsilon, dou
     }
     
 
-int SerialSolver::uIndex(int i, int j, int k){
-    return (i * Ny + j) * Nz + k;
-}
-int SerialSolver::u2rIndex(int i, int j, int k){
-    return ((i-1) * ny + (j-1)) * nz + (k-1);
-}
 
 int SerialSolver::run_solver(){
     int iterations = 0;
@@ -68,18 +62,21 @@ int SerialSolver::run_solver(){
         for (int i = 1; i < Nx-1; i++){
             for (int j = 1; j < Ny-1; j++){
                 for (int k = 1; k < Nz-1; k++){
+                    int redind = u2rIndex(i,j,k);
                     u2[uIndex(i,j,k)] = j_coeff * (
                         + (u[uIndex(i + 1, j    , k    )] + u[uIndex(i - 1, j    , k    )]) * hx2 
                         + (u[uIndex(i    , j + 1, k    )] + u[uIndex(i    , j - 1, k    )]) * hy2
-                        + (u[uIndex(i    , j    , k + 1)] + u[uIndex(i    , j    , k - 1)]) * hz2 - f[u2rIndex(i,j,k)]);
+                        + (u[uIndex(i    , j    , k + 1)] + u[uIndex(i    , j    , k - 1)]) * hz2 - f[redind]);
                 }
             }
         }
         double* temp = u;
         u = u2;
         u2 = temp;
-
-        residual = get_residual();
+        
+        if (iterations % 100 == 0){
+            residual = get_residual();
+        }
         iterations++;
     }
     if (iterations >= max_iter){
@@ -91,6 +88,7 @@ int SerialSolver::run_solver(){
 }
 
 double SerialSolver::get_residual(){
+    double sum_residual = 0;
     for (int i = 1; i < Nx-1; i++){
         for (int j = 1; j < Ny-1; j++){
             for (int k = 1; k < Nz-1; k++){
@@ -105,11 +103,12 @@ double SerialSolver::get_residual(){
                     +     u[uIndex(i    , j    , k + 1)]
                     - 2 * u[uIndex(i    , j    , k    )]
                     +     u[uIndex(i    , j    , k - 1)]) * hz2;
-                r[reduced_index] = f[reduced_index] - ddu[reduced_index];
+                double r_step = f[reduced_index] - ddu[reduced_index];
+                sum_residual += r_step*r_step;
             }
         }
     }
-    return F77NAME(dnrm2)(nx * ny * nz, r, 1);;
+    return sqrt(sum_residual);
 }
 
 void SerialSolver::initialize_test(int test){

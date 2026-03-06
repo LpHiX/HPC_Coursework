@@ -18,10 +18,10 @@ int main(int argc, char* argv[]){
     opts.add_options()
         ("help", "Print available options")
         ("forcing", po::value<std::string>(), "Input forcing file")
-        ("test", po::value<int>()->default_value(1), "Test case to use (1-5)")
-        ("Nx", po::value<int>()->default_value(32), "Number of grid points (x)")
-        ("Ny", po::value<int>()->default_value(32), "Number of grid points (y)")
-        ("Nz", po::value<int>()->default_value(32), "Number of grid points (z)")
+        ("test", po::value<int>()->default_value(2), "Test case to use (1-5)")
+        ("Nx", po::value<int>()->default_value(96), "Number of grid points (x)")
+        ("Ny", po::value<int>()->default_value(96), "Number of grid points (y)")
+        ("Nz", po::value<int>()->default_value(96), "Number of grid points (z)")
         ("epsilon", po::value<double>()->default_value(1e-8), "Residual threshold");
 
     po::variables_map vm;
@@ -56,11 +56,11 @@ int main(int argc, char* argv[]){
         read_forcing(forcing, Nx, Ny, Nz, f);
         test = 0;
     }
-    write_sample_forcing(32, 32, 32, "testcase2forcing.txt");
+    // write_sample_forcing(32, 32, 32, "testcase2forcing.txt");
 
     SerialSolver ss = SerialSolver(Nx, Ny, Nz, test, epsilon, f);
     ss.run_solver();
-    write_solution(ss, "solution.txt");
+    // write_solution(ss, "solution.txt");
 
     // std::cout << "Residual: " << ss.get_residual() << std::endl;
     return 0;

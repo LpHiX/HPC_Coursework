@@ -46,4 +46,6 @@
 *.txt
 
 poisson
+poisson-mpi
+poisson-cuda
 run_tests
