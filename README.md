@@ -11,3 +11,4 @@ Add `-fopt-info-vec-missed` flag when I want to debug vectorization.
 2. Pull initializing out of the solver
     1. This means both u, f
 3. Refactor testing
+4. Have a consisten naming scheme
