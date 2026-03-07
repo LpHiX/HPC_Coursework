@@ -36,7 +36,7 @@ int main(int argc, char* argv[]){
     std::string forcing;
 
     // Not implemented yet:
-    // int test          = vm["test"].as<int>();
+    int test          = vm["test"].as<int>();
     const double epsilon    = vm["epsilon"].as<double>();
 
     int Nx            = vm["Nx"].as<int>();
@@ -54,11 +54,14 @@ int main(int argc, char* argv[]){
 
         forcing = vm["forcing"].as<std::string>();
         read_forcing(forcing, Nx, Ny, Nz, f);
-        // test = 0;
+        test = 0;
     }
     // write_sample_forcing(32, 32, 32, "testcase2forcing.txt");
 
     SerialSolver ss = SerialSolver(Nx, Ny, Nz, epsilon);
+    if (test != 0){
+        ss.initialize_test(test);
+    }
     ss.solve();
     // write_solution(ss, "solution.txt");
 

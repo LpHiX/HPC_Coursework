@@ -20,6 +20,7 @@ public:
     ~MPISolver();
 
     void solve();
+    void initialize_test(int test);
     double get_residual();
 private:
     MPI_Comm gridcomm;
@@ -30,6 +31,7 @@ private:
     std::unique_ptr<JacobiLocalState> localstate;
 
     // void exchange();
+    int start_i, start_j, start_k;
 };
 
 inline std::string DirectionNames[6] = {"POS_X","NEG_X","POS_Y","NEG_Y","POS_Z","NEG_Z"};

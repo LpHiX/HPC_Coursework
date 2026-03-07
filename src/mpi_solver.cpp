@@ -57,15 +57,24 @@ epsilon(epsilon)
     lNy += 2;
     lNz += 2;
 
-    // int Start_i = (Pi < remainder_x) ? Pi * (quotient_x + 1) : Pi * quotient_x + remainder_x;
-    // int Start_j = (Pj < remainder_y) ? Pj * (quotient_y + 1) : Pj * quotient_y + remainder_y;
-    // int Start_k = (Pk < remainder_z) ? Pk * (quotient_z + 1) : Pk * quotient_z + remainder_z;
+    // N distribution: (13)
+    // 0 1 2 3 4 5 6 7 8 9 10 11 12
+    // 0 1 2 3 4 5 
+    //         4 5 6 7 8 9
+    //                 8 9 10 11 12
+    // Pi * (quotient + 1) (quotient = 3)
+    // 0 1 2 3
+    //         4 5 6 7
+    //                 8 9 10
+    start_i = (Pi < remainder_x) ? Pi * (quotient_x + 1) : Pi * quotient_x + remainder_x;
+    start_j = (Pj < remainder_y) ? Pj * (quotient_y + 1) : Pj * quotient_y + remainder_y;
+    start_k = (Pk < remainder_z) ? Pk * (quotient_z + 1) : Pk * quotient_z + remainder_z;
 
     // TEMPORARY INITIALIZER
     double* lf = new double[lNx*lNy*lNz];
     for (int i = 0; i < lNx*lNy*lNz; i++){lf[i]=6;}
 
-    localstate = std::make_unique<JacobiLocalState>(Nx, Ny, Nz, lNx, lNy, lNz, lf);
+    localstate = std::make_unique<JacobiLocalState>(Nx, Ny, Nz, lNx, lNy, lNz);
 
     for (int i = 0; i < 6; i++){
         if(neighbours_ranks[i] != MPI_PROC_NULL){
@@ -75,6 +84,10 @@ epsilon(epsilon)
         } 
     }
     
+}
+
+void MPISolver::initialize_test(int test){
+    localstate->apply_test_conditions(test, start_i, start_j, start_k);
 }
 
 void MPISolver::solve(){

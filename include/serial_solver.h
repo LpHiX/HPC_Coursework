@@ -23,10 +23,8 @@ public:
 
     int solve();
     double get_residual();
+    void initialize_test(int test);
 private:
     double *u, *u2, *ddu, *f, *r;
-    void initialize_test(int test);
     std::unique_ptr<JacobiLocalState> localstate;
-
-
 };

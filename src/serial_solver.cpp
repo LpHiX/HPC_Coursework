@@ -14,11 +14,7 @@ SerialSolver::SerialSolver(int Nx, int Ny, int Nz, double epsilon):
     Nz(Nz),
     epsilon(epsilon)
     {
-
-        double* lf = new double[Nx*Ny*Nz];   
-        for (int i = 0; i < Nx*Ny*Nz; i++){lf[i]=6;}
-
-        localstate = std::make_unique<JacobiLocalState>(Nx, Ny, Nz, Nx, Ny, Nz, lf);
+        localstate = std::make_unique<JacobiLocalState>(Nx, Ny, Nz, Nx, Ny, Nz);
     }
     
 
@@ -52,112 +48,6 @@ int SerialSolver::solve(){
 
 double SerialSolver::get_residual(){ return sqrt(localstate->get_residualsquared());}
 
-// void SerialSolver::initialize_test(int test){
-//     switch (test ) {
-//         case 0:
-//             break;
-//         case 1:
-//             // for (int i = 0; i < Nx; i++){
-//             //     double x = i * hx;
-//             //     for (int j = 0; j < Ny; j++){
-//             //         double y = j * hy;
-//             //         for (int k = 0; k < Nz; k++){
-//             //             double z = k * hz;
-//             //             double scalar = x*x + y*y + z*z;
-//             //             u[uIndex(i, j, k)] = scalar;
-//             //             u2[uIndex(i, j, k)] = scalar;
-//             //         }
-//             //     }
-//             // }
-//             for (int i = 1; i < Nx-1; i++){
-//                 for (int j = 1; j < Ny-1; j++){
-//                     for (int k = 1; k < Nz-1; k++){
-//                         f[u2rIndex(i, j, k)] = 6;
-//                         // u[uIndex(i,j,k)] = 0;
-//                     }
-//                 }
-//             }
-//             break;
-//         case 2:
-//             for (int i = 0; i < Nx; i++){
-//                 double x = i * hx;
-//                 for (int j = 0; j < Ny; j++){
-//                     double y = j * hy;
-//                     for (int k = 0; k < Nz; k++){
-//                         double z = k * hz;
-//                         double scalar = sin(M_PI * x) * sin(M_PI * y) * sin(M_PI * z);
-//                         u[uIndex(i, j, k)] = scalar;
-//                         u2[uIndex(i, j, k)] = scalar;
-//                     }
-//                 }
-//             }
-//             for (int i = 1; i < Nx-1; i++){
-//                 double x = i * hx;
-//                 for (int j = 1; j < Ny-1; j++){
-//                     double y = j * hy;
-//                     for (int k = 1; k < Nz-1; k++){
-//                         double z = k * hz;
-//                         f[u2rIndex(i, j, k)] = - 3 * M_PI * M_PI * sin(M_PI * x) * sin(M_PI * y) * sin(M_PI * z);
-//                         u[uIndex(i,j,k)] = 0;
-//                     }
-//                 }
-//             }
-//             break;
-//         case 3:
-//             for (int i = 0; i < Nx; i++){
-//                 double x = i * hx;
-//                 for (int j = 0; j < Ny; j++){
-//                     double y = j * hy;
-//                     for (int k = 0; k < Nz; k++){
-//                         double z = k * hz;
-//                         double scalar = sin(M_PI * x) * sin(4 * M_PI * y) * sin(8 * M_PI * z);
-//                         u[uIndex(i, j, k)] = scalar;
-//                         u2[uIndex(i, j, k)] = scalar;
-//                     }
-//                 }
-//             }
-//             for (int i = 1; i < Nx-1; i++){
-//                 double x = i * hx;
-//                 for (int j = 1; j < Ny-1; j++){
-//                     double y = j * hy;
-//                     for (int k = 1; k < Nz-1; k++){
-//                         double z = k * hz;
-//                         f[u2rIndex(i,j,k)] = - 81 * M_PI * M_PI * sin(M_PI * x) * sin(4 * M_PI * y) * sin(8 * M_PI * z);
-//                         u[uIndex(i,j,k)] = 0;
-//                     }
-//                 }
-//             }
-//             break;
-//         case 4:
-//             for (int i = 1; i < Nx-1; i++){
-//                 double x = i * hx;
-//                 for (int j = 1; j < Ny-1; j++){
-//                     double y = j * hy;
-//                     for (int k = 1; k < Nz-1; k++){
-//                         double z = k * hz;
-//                         f[u2rIndex(i,j,k)] = 100 * exp(-100 * ((x - 0.5)*(x - 0.5)+(y - 0.5)*(y - 0.5)+(z - 0.5)*(z - 0.5)));
-//                     }
-//                 }
-//             }
-//             break;
-//         case 5:
-//             for (int i = 1; i < Nx-1; i++){
-//                 double x = i * hx;
-//                 for (int j = 1; j < Ny-1; j++){
-//                     for (int k = 1; k < Nz-1; k++){
-//                         if(x < 0.5) {f[u2rIndex(i,j,k)] = -1;}
-//                         else {f[u2rIndex(i,j,k)] = 1;}
-//                     }
-//                 }
-//             }
-//             break;
-//     }
-// }
-
-// SerialSolver::~SerialSolver(){
-//     delete[] u;
-//     delete[] u2;
-//     delete[] ddu;
-//     delete[] f;
-//     delete[] r;
-// }
+void SerialSolver::initialize_test(int test){
+    localstate->apply_test_conditions(test, 0, 0, 0);
+}

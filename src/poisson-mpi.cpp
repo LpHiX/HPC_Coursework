@@ -54,8 +54,7 @@ int main(int argc, char *argv[])
 
     std::string forcing;
 
-    // Not implemented yet:
-    // int test          = vm["test"].as<int>();
+    int test          = vm["test"].as<int>();
     const double epsilon    = vm["epsilon"].as<double>();
 
     int Nx = vm["Nx"].as<int>();
@@ -93,9 +92,15 @@ int main(int argc, char *argv[])
     if (rank == 0){
         boost::timer::auto_cpu_timer t;
         MPISolver solver(Nx, Ny, Nz, Px, Py, Pz, epsilon);
+        if (test != 0){
+            solver.initialize_test(test);
+        }
         solver.solve();
     } else{
         MPISolver solver(Nx, Ny, Nz, Px, Py, Pz, epsilon);
+        if (test != 0){
+            solver.initialize_test(test);
+        }
         solver.solve();
     }
 
