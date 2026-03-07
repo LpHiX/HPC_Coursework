@@ -6,8 +6,8 @@ BUILDDIR = build
 TESTDIR = tests
 
 
-CXX = g++
-poisson-mpi : CXX = mpicxx
+CXX = mpicxx
+# poisson-mpi : CXX = mpicxx
 poisson-cuda : CXX = nvcc
 
 CXXFLAGS = -O3 -Werror -Wall -ftree-vectorize  -I $(INCDIR)
@@ -70,10 +70,10 @@ run: poisson
 	@echo "\033[0;32mRunning Poisson \033[0m"
 	./poisson
 
-NP = 12
+NP = 36
 runmpi: poisson-mpi
 	@echo "\033[0;32mRunning Poisson \033[0m"
-	mpiexec --mca btl_tcp_if_include lo -np $(NP) ./poisson-mpi --Px 3 --Py 2 --Pz 2
+	mpiexec --mca btl_tcp_if_include lo -np $(NP) ./poisson-mpi --Px 3 --Py 3 --Pz 4 --Nx 64 --Ny 64 --Nz 64
 
 tests: $(TEST_TARGET)
 	@echo "\033[0;32mRunning Tests \033[0m"

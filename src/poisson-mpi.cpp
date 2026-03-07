@@ -74,9 +74,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    if (rank == 0){
-        boost::timer::auto_cpu_timer t;
-    }
+
 
     // double *f = nullptr;
 
@@ -92,8 +90,16 @@ int main(int argc, char *argv[])
         // test = 0;
     }
 
-    MPISolver solver(Nx, Ny, Nz, Px, Py, Pz, epsilon);
-    solver.solve();
+    if (rank == 0){
+        boost::timer::auto_cpu_timer t;
+        MPISolver solver(Nx, Ny, Nz, Px, Py, Pz, epsilon);
+        solver.solve();
+    } else{
+        MPISolver solver(Nx, Ny, Nz, Px, Py, Pz, epsilon);
+        solver.solve();
+    }
+
+
 
     MPI_Finalize();
     return 0;

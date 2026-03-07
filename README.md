@@ -12,4 +12,8 @@ Add `-fopt-info-vec-missed` flag when I want to debug vectorization.
     1. This means both u, f
 3. Refactor testing
 4. Have a consisten naming scheme
-5. Use vectors?
+6. Swap i j k, x, y, z
+7. file read and write MPI
+8. write MPI tests
+9. rewrite serial to use MPI code
+10. add initializer to mpi

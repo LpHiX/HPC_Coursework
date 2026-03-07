@@ -18,10 +18,10 @@ int main(int argc, char* argv[]){
     opts.add_options()
         ("help", "Print available options")
         ("forcing", po::value<std::string>(), "Input forcing file")
-        ("test", po::value<int>()->default_value(2), "Test case to use (1-5)")
-        ("Nx", po::value<int>()->default_value(96), "Number of grid points (x)")
-        ("Ny", po::value<int>()->default_value(96), "Number of grid points (y)")
-        ("Nz", po::value<int>()->default_value(96), "Number of grid points (z)")
+        ("test", po::value<int>()->default_value(1), "Test case to use (1-5)")
+        ("Nx", po::value<int>()->default_value(32), "Number of grid points (x)")
+        ("Ny", po::value<int>()->default_value(32), "Number of grid points (y)")
+        ("Nz", po::value<int>()->default_value(32), "Number of grid points (z)")
         ("epsilon", po::value<double>()->default_value(1e-8), "Residual threshold");
 
     po::variables_map vm;

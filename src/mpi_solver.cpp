@@ -6,6 +6,8 @@
 #include "mpi_solver.h"
 #include <iostream>
 #include <cmath>
+#include <boost/timer/timer.hpp>
+#include <iomanip>
 
 MPISolver::MPISolver(int Nx, int Ny, int Nz, int Px, int Py, int Pz, double epsilon):
 Nx(Nx),
@@ -75,11 +77,15 @@ epsilon(epsilon)
 }
 
 void MPISolver::solve(){
+    boost::timer::cpu_timer wall_timer;
+    double last_report_time = -2;
 
     int iterations = 0;
     double residual = get_residual();
 
     while (residual > epsilon){
+        localstate->jacobi_step();
+        
         MPI_Request requests[12];
         int req_count = 0;
 
@@ -100,8 +106,6 @@ void MPISolver::solve(){
             }
         }
         
-        localstate->jacobi_step();
-
         MPI_Waitall(req_count, requests, MPI_STATUS_IGNORE);
         for (int i = 0; i < 6; i++){
             if (neighbours_ranks[i] != MPI_PROC_NULL){
@@ -109,7 +113,20 @@ void MPISolver::solve(){
                 localstate->set_u_boundary(recv_buffers[i], dir);
             }
         }
-        residual = get_residual();
+        if (iterations % 100 == 0) {
+            residual = get_residual();
+            double current_time = wall_timer.elapsed().wall / 1e9; // Convert nanoseconds to seconds        
+            if (current_time - last_report_time >= 2.0) {
+                if (gridrank == 0) {
+                    std::cout 
+                    << std::setw(15) << "Step: " << std::setw(10) << iterations 
+                    << std::setw(15) << "Time: " << std::setw(10) << current_time << "s"
+                    << std::setw(15) << "Residual: " << std::setw(15) << residual << std::endl;
+                    last_report_time = current_time;
+                }
+                last_report_time = current_time;
+            }
+        }
         iterations++;
     }
     if (gridrank == 0) std::cout << "Converged in " << iterations << " iterations, residual: " << residual << std::endl;
