@@ -31,13 +31,15 @@ epsilon(epsilon)
     MPI_Cart_shift(gridcomm, 2, 1, &neighbours_ranks[NEG_Z], &neighbours_ranks[POS_Z]);
 
     // Handle remainders
-
-    int quotient_x = Nx / Px;
-    int quotient_y = Ny / Py;
-    int quotient_z = Nz / Pz;
-    int remainder_x = Nx % Px;
-    int remainder_y = Ny % Py;
-    int remainder_z = Nz % Pz;
+    int nx = Nx - 2;
+    int ny = Ny - 2;
+    int nz = Nz - 2;
+    int quotient_x = nx / Px;
+    int quotient_y = ny / Py;
+    int quotient_z = nz / Pz;
+    int remainder_x = nx % Px;
+    int remainder_y = ny % Py;
+    int remainder_z = nz % Pz;
 
     int coords[3];
     MPI_Cart_coords(gridcomm, gridrank, 3, coords);
@@ -48,6 +50,10 @@ epsilon(epsilon)
     int lNx = (Pi < remainder_x) ? quotient_x + 1 : quotient_x;
     int lNy = (Pj < remainder_y) ? quotient_y + 1 : quotient_y;
     int lNz = (Pk < remainder_z) ? quotient_z + 1 : quotient_z;
+
+    lNx += 2;
+    lNy += 2;
+    lNz += 2;
 
     // int Start_i = (Pi < remainder_x) ? Pi * (quotient_x + 1) : Pi * quotient_x + remainder_x;
     // int Start_j = (Pj < remainder_y) ? Pj * (quotient_y + 1) : Pj * quotient_y + remainder_y;

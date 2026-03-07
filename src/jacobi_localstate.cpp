@@ -4,21 +4,7 @@
  */
 #include "jacobi_localstate.h"
 #include <cmath>
-/**
- * Math Explanation:
- * 
- * N=11,
- * Serial :
- * 
- * 0 1 2 3 4 5 6 7 8 9 10
- * 
- * MPI :
- * N=7         N=6
- * 0 1 2 3 4 5 6
- *           5 6 7 8 7 19
- * Shared boundary: 5,6
- * Aim: Pass as little information as possible. Meaning: for loop might get a little complicated.
- */
+
 
 
 
@@ -120,9 +106,9 @@ void JacobiLocalState::get_boundary_constants(Direction plane_dir, bool is_sendi
             break;
         case POS_Z:
             offset = lNz - 1;
-            shift = 1;
+            shift = -1;
         case NEG_Z:
-            if (plane_dir == NEG_Z) shift = -1;
+            if (plane_dir == NEG_Z) shift = 1;
             M = lNx;
             N = lNy;
             iMul = lNy * lNz;
