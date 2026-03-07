@@ -12,3 +12,4 @@ Add `-fopt-info-vec-missed` flag when I want to debug vectorization.
     1. This means both u, f
 3. Refactor testing
 4. Have a consisten naming scheme
+5. Use vectors?
