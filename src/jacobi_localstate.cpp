@@ -34,9 +34,9 @@ lf(lf)
 }
 
 void JacobiLocalState::jacobi_step(){
-    for (int i = 1; i < lNx-1; i++){
+    for (int k = 1; k < lNz-1; k++){
         for (int j = 1; j < lNy-1; j++){
-            for (int k = 1; k < lNz-1; k++){
+            for (int i = 1; i < lNx-1; i++){
                 int redind = u2rIndex(i,j,k);
                 lu2[uIndex(i,j,k)] = j_coeff * (
                     + (lu[uIndex(i + 1, j    , k    )] + lu[uIndex(i - 1, j    , k    )]) * hx2 
@@ -52,9 +52,9 @@ void JacobiLocalState::jacobi_step(){
 
 double JacobiLocalState::get_residualsquared() const{
     double sum_residual = 0;
-    for (int i = 1; i < lNx-1; i++){
+    for (int k = 1; k < lNz-1; k++){
         for (int j = 1; j < lNy-1; j++){
-            for (int k = 1; k < lNz-1; k++){
+            for (int i = 1; i < lNx-1; i++){
                 int reduced_index = u2rIndex(i, j, k);
                 lddu[reduced_index] =(
                     +     lu[uIndex(i + 1, j    , k    )]
@@ -81,38 +81,73 @@ int JacobiLocalState::get_planesize(Direction plane_dir) const{
 }
 
 void JacobiLocalState::get_boundary_constants(Direction plane_dir, bool is_sending, int &offset, int &M, int &N, int &iMul, int &jMul) const {
+
+    // // Writing it all back out to figure it out one by one, this is easier for me to understand.
+    // // X positive -> z,y
+    // int offset = lNx - 1;
+    // int M = lNz;
+    // int N = lNy;
+    // int iMul = lNy * lNx;
+    // int jMul = lNx;
+    // for (int im = 0; im < M; im++){
+    //     for (int jn = 0; jn < N; jn++){
+    //         u[offset + im * lNy * lNx  + jn * lNx] = plane[im * N + jn];
+    //     }
+    // }
+    // // Y positive -> z,x
+    // int offset = (lNy - 1) * lNx;
+    // int M = lNz;
+    // int N = lNx;
+    // int iMul = lNy * lNx;
+    // int jMul = 1;
+    // for (int im = 0; im < M; im++){
+    //     for (int jn = 0; jn < N; jn++){
+    //         u[offset + im * lNy * lNx  + jn] = plane[im * N + jn];
+    //     }
+    // }
+    // // Z positive -> x,y
+    // int offset = (lNz - 1) * lNy * lNx;
+    // int M = lNy;
+    // int N = lNx;
+    // int iMul = lNx
+    // int jMul = 1;
+    // for (int im = 0; im < M; im++){
+    //     for (int jn = 0; jn < N; jn++){
+    //         u[offset + im * lNy * lNx  + jn * lNx] = plane[im * N + jn];
+    //     }
+    // }
     offset = 0;
     int shift = 0;
     switch (plane_dir) {
         case POS_X:
-            offset = (lNx - 1)* lNy * lNz;
-            shift = - lNy * lNz;
+            offset = lNx - 1;
+            shift = - 1;
         case NEG_X:
-            if (plane_dir == NEG_X) shift = lNy * lNz;
-            M = lNy;
-            N = lNz;
-            iMul = lNz;
-            jMul = 1;
+            if (plane_dir == NEG_X) shift = 1;
+            M = lNz;
+            N = lNy;
+            iMul = lNy * lNx;
+            jMul = lNx;
             break;
         case POS_Y:
-            offset = (lNy - 1) * lNz;
-            shift = - lNz;
+            offset = (lNy - 1) * lNx;
+            shift = - lNx;
         case NEG_Y:
-            if (plane_dir == NEG_Y) shift = lNz;
-            M = lNx;
-            N = lNz;
-            iMul = lNy * lNz;
+            if (plane_dir == NEG_Y) shift = lNx;
+            M = lNz;
+            N = lNx;
+            iMul = lNy * lNx;
             jMul = 1;
             break;
         case POS_Z:
-            offset = lNz - 1;
-            shift = -1;
+            offset = (lNz - 1) * lNy * lNx;
+            shift = - lNy * lNx;
         case NEG_Z:
-            if (plane_dir == NEG_Z) shift = 1;
-            M = lNx;
-            N = lNy;
-            iMul = lNy * lNz;
-            jMul = lNz;
+            if (plane_dir == NEG_Z) shift = lNy * lNx;
+            M = lNy;
+            N = lNx;
+            iMul = lNx;
+            jMul = 1;
             break;
         default:
             throw "Not a possible direction";

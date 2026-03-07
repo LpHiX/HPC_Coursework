@@ -22,8 +22,10 @@ public:
     JacobiLocalState() = delete;
     ~JacobiLocalState();
 
-    inline int uIndex(int i, int j, int k) const { return (i * lNy + j) * lNz + k; }
-    inline int u2rIndex(int i, int j, int k) const { return ((i-1) * lny + (j-1)) * lnz + (k-1); }
+    // inline int uIndex(int i, int j, int k) const { return (i * lNy + j) * lNz + k; }
+    // inline int u2rIndex(int i, int j, int k) const { return ((i-1) * lny + (j-1)) * lnz + (k-1); }
+    inline int uIndex(int i, int j, int k) const { return (k * lNy + j) * lNx + i; }
+    inline int u2rIndex(int i, int j, int k) const { return ((k-1) * lny + (j-1)) * lnx + (i-1); }
 
     double get_residualsquared() const;
     void set_u_boundary(double *plane, Direction plane_dir);
