@@ -15,18 +15,18 @@ void write_solution(SerialSolver &ss, std::string filename){
     fileOutput.precision(std::numeric_limits<double>::max_digits10);
     fileOutput << ss.Nx << " " << ss.Ny << " " << ss.Nz << std::endl;
 
-    const double *u = ss.get_u();
+    // const double *u = ss.get_u();
 
-    for (int i = 0; i < ss.Nx; i++){
-        double x = i * ss.hx;
-        for (int j = 0; j < ss.Ny; j++){
-            double y = j * ss.hy;
-            for (int k = 0; k < ss.Nz; k++){
-                double z = k * ss.hz;
-                fileOutput << x << " " << y << " " << z << " " << u[ss.uIndex(i,j,k)] << std::endl;
-            }
-        }
-    }
+    // for (int i = 0; i < ss.Nx; i++){
+    //     double x = i * ss.hx;
+    //     for (int j = 0; j < ss.Ny; j++){
+    //         double y = j * ss.hy;
+    //         for (int k = 0; k < ss.Nz; k++){
+    //             double z = k * ss.hz;
+    //             fileOutput << x << " " << y << " " << z << " " << u[ss.uIndex(i,j,k)] << std::endl;
+    //         }
+    //     }
+    // }
     fileOutput.close();
 }
 

@@ -61,6 +61,7 @@ epsilon(epsilon)
     // int Start_j = (Pj < remainder_y) ? Pj * (quotient_y + 1) : Pj * quotient_y + remainder_y;
     // int Start_k = (Pk < remainder_z) ? Pk * (quotient_z + 1) : Pk * quotient_z + remainder_z;
 
+    // TEMPORARY INITIALIZER
     double* lf = new double[lNx*lNy*lNz];
     for (int i = 0; i < lNx*lNy*lNz; i++){lf[i]=6;}
 
