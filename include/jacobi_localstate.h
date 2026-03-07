@@ -4,6 +4,15 @@
  */
 #pragma once
 
+enum Direction {
+    POS_X,
+    NEG_X,
+    POS_Y,
+    NEG_Y,
+    POS_Z,
+    NEG_Z
+};
+
 class JacobiLocalState{
 public:
     const int Nx, Ny, Nz, lNx, lNy, lNz, lnx, lny, lnz;
@@ -16,21 +25,14 @@ public:
     inline int uIndex(int i, int j, int k) const { return (i * lNy + j) * lNz + k; }
     inline int u2rIndex(int i, int j, int k) const { return ((i-1) * lny + (j-1)) * lnz + (k-1); }
 
-    double get_residual() const;
+    double get_residualsquared() const;
     void set_u_boundary(double *plane, Direction plane_dir);
     void jacobi_step();
+    int get_planesize(Direction plane_dir) const;
     void get_u_boundary(double *&plane, Direction plane_dir) const;
-    void get_boundary_constants(Direction plane_dir, int &offset, int &M, int &N, int &iMul, int &jMul) const;
+    void get_boundary_constants(Direction plane_dir, bool is_sending, int &offset, int &M, int &N, int &iMul, int &jMul) const;
 private:
     double *lu, *lu2, *lddu, *lf, *lr;
 
 };
 
-enum Direction {
-    POS_X,
-    NEG_X,
-    POS_Y,
-    NEG_Y,
-    POS_Z,
-    NEG_Z
-};

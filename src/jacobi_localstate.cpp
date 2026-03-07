@@ -38,7 +38,7 @@ hz(1.0 / (Nz - 1)),
 hx2(1/(hx*hx)),
 hy2(1/(hy*hy)),
 hz2(1/(hz*hz)),
-j_coeff(0.5 / (hx2 + hy2 + hz2))
+j_coeff(0.5 / (hx2 + hy2 + hz2)),
 lf(lf)
 {
     lu   = new double[lNx * lNy * lNz]();
@@ -64,7 +64,7 @@ void JacobiLocalState::jacobi_step(){
     lu2 = temp;
 }
 
-double JacobiLocalState::get_residual() const{
+double JacobiLocalState::get_residualsquared() const{
     double sum_residual = 0;
     for (int i = 1; i < lNx-1; i++){
         for (int j = 1; j < lNy-1; j++){
@@ -85,15 +85,24 @@ double JacobiLocalState::get_residual() const{
             }
         }
     }
-    return sqrt(sum_residual);
+    return sum_residual;
 }
 
-void JacobiLocalState::get_boundary_constants(Direction plane_dir, int &offset, int &M, int &N, int &iMul, int &jMul) const {
+int JacobiLocalState::get_planesize(Direction plane_dir) const{
+    int M, N, dummy_offset, dummy_i, dummy_j;
+    get_boundary_constants(plane_dir, false, dummy_offset, M, N, dummy_i, dummy_j);
+    return M * N;
+}
+
+void JacobiLocalState::get_boundary_constants(Direction plane_dir, bool is_sending, int &offset, int &M, int &N, int &iMul, int &jMul) const {
     offset = 0;
+    int shift = 0;
     switch (plane_dir) {
         case POS_X:
             offset = (lNx - 1)* lNy * lNz;
+            shift = - lNy * lNz;
         case NEG_X:
+            if (plane_dir == NEG_X) shift = lNy * lNz;
             M = lNy;
             N = lNz;
             iMul = lNz;
@@ -101,7 +110,9 @@ void JacobiLocalState::get_boundary_constants(Direction plane_dir, int &offset, 
             break;
         case POS_Y:
             offset = (lNy - 1) * lNz;
+            shift = - lNz;
         case NEG_Y:
+            if (plane_dir == NEG_Y) shift = lNz;
             M = lNx;
             N = lNz;
             iMul = lNy * lNz;
@@ -109,7 +120,9 @@ void JacobiLocalState::get_boundary_constants(Direction plane_dir, int &offset, 
             break;
         case POS_Z:
             offset = lNz - 1;
+            shift = 1;
         case NEG_Z:
+            if (plane_dir == NEG_Z) shift = -1;
             M = lNx;
             N = lNy;
             iMul = lNy * lNz;
@@ -118,11 +131,12 @@ void JacobiLocalState::get_boundary_constants(Direction plane_dir, int &offset, 
         default:
             throw "Not a possible direction";
     }
+    if (is_sending) offset += shift;
 }
 
 void JacobiLocalState::set_u_boundary(double *plane, Direction plane_dir){
     int offset, M, N, iMul, jMul;
-    get_boundary_constants(plane_dir, offset, M, N, iMul, jMul);
+    get_boundary_constants(plane_dir, false, offset, M, N, iMul, jMul);
     
 
     for (int im = 0; im < M; im++){
@@ -134,7 +148,7 @@ void JacobiLocalState::set_u_boundary(double *plane, Direction plane_dir){
 
 void JacobiLocalState::get_u_boundary(double *&plane, Direction plane_dir) const{
     int offset, M, N, iMul, jMul;
-    get_boundary_constants(plane_dir, offset, M, N, iMul, jMul);
+    get_boundary_constants(plane_dir, true, offset, M, N, iMul, jMul);
     
     for (int im = 0; im < M; im++){
         for (int jn = 0; jn < N; jn++){

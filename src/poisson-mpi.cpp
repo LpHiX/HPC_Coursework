@@ -2,17 +2,13 @@
  * @file poisson-mpi.cpp
  * @author Martin Leung
  */
-/**
- * @file poisson.cpp
- * @author Martin Leung
- */
+
 #include <iostream>
 #include <string>
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
-#include "serial_solver.h"
-#include "filemanager.h"
+#include "mpi_solver.h"
 #include <boost/timer/timer.hpp>
 #include <mpi.h>
 
@@ -60,7 +56,7 @@ int main(int argc, char *argv[])
 
     // Not implemented yet:
     // int test          = vm["test"].as<int>();
-    // const double epsilon    = vm["epsilon"].as<double>();
+    const double epsilon    = vm["epsilon"].as<double>();
 
     int Nx = vm["Nx"].as<int>();
     int Ny = vm["Ny"].as<int>();
@@ -82,7 +78,7 @@ int main(int argc, char *argv[])
         boost::timer::auto_cpu_timer t;
     }
 
-    double *f = nullptr;
+    // double *f = nullptr;
 
     if (vm.count("forcing"))
     {
@@ -92,9 +88,12 @@ int main(int argc, char *argv[])
         // }
 
         forcing = vm["forcing"].as<std::string>();
-        read_forcing(forcing, Nx, Ny, Nz, f);
+        // read_forcing(forcing, Nx, Ny, Nz, f);
         // test = 0;
     }
+
+    MPISolver solver(Nx, Ny, Nz, Px, Py, Pz, epsilon);
+    solver.solve();
 
     MPI_Finalize();
     return 0;

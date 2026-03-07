@@ -8,6 +8,7 @@
 #include "jacobi_localstate.h"
 #include <string>
 #include <memory>
+#include <mpi.h>
 
 class MPISolver{
 public:
@@ -19,12 +20,16 @@ public:
     ~MPISolver();
 
     void solve();
+    double get_residual();
 private:
+    MPI_Comm gridcomm;
+    int gridrank;
     int neighbours_ranks[6];
-    double* transfer_plane_x;
-    double* transfer_plane_y;
-    double* transfer_plane_z;
+    double* send_buffers[6] = {nullptr};
+    double* recv_buffers[6] = {nullptr};
     std::unique_ptr<JacobiLocalState> localstate;
+
+    // void exchange();
 };
 
 inline std::string DirectionNames[6] = {"POS_X","NEG_X","POS_Y","NEG_Y","POS_Z","NEG_Z"};

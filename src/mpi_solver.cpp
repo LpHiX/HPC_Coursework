@@ -4,9 +4,8 @@
  */
 
 #include "mpi_solver.h"
-#include <mpi.h>
 #include <iostream>
-#include <algorithm>
+#include <cmath>
 
 MPISolver::MPISolver(int Nx, int Ny, int Nz, int Px, int Py, int Pz, double epsilon):
 Nx(Nx),
@@ -17,7 +16,6 @@ Py(Py),
 Pz(Pz),
 epsilon(epsilon)
 {
-    MPI_Comm gridcomm;
     const int dims = 3;
     int sizes[dims] = {Px, Py, Pz};
     int periods[dims] = {0, 0, 0};
@@ -25,8 +23,8 @@ epsilon(epsilon)
 
     MPI_Cart_create(MPI_COMM_WORLD, dims, sizes, periods, reorder, &gridcomm);
 
-    int rank;
-    MPI_Comm_rank(gridcomm, &rank);
+    // gridrank;
+    MPI_Comm_rank(gridcomm, &gridrank);
 
     MPI_Cart_shift(gridcomm, 0, 1, &neighbours_ranks[NEG_X], &neighbours_ranks[POS_X]);
     MPI_Cart_shift(gridcomm, 1, 1, &neighbours_ranks[NEG_Y], &neighbours_ranks[POS_Y]);
@@ -42,7 +40,7 @@ epsilon(epsilon)
     int remainder_z = Nz % Pz;
 
     int coords[3];
-    MPI_Cart_coords(gridcomm, rank, 3, coords);
+    MPI_Cart_coords(gridcomm, gridrank, 3, coords);
     int Pi = coords[0];
     int Pj = coords[1];
     int Pk = coords[2];
@@ -51,28 +49,78 @@ epsilon(epsilon)
     int lNy = (Pj < remainder_y) ? quotient_y + 1 : quotient_y;
     int lNz = (Pk < remainder_z) ? quotient_z + 1 : quotient_z;
 
-    int Start_i = (Pi < remainder_x) ? Pi * (quotient_x + 1) : Pi * quotient_x + remainder_x;
-    int Start_j = (Pj < remainder_y) ? Pj * (quotient_y + 1) : Pj * quotient_y + remainder_y;
-    int Start_k = (Pk < remainder_z) ? Pk * (quotient_z + 1) : Pk * quotient_z + remainder_z;
+    // int Start_i = (Pi < remainder_x) ? Pi * (quotient_x + 1) : Pi * quotient_x + remainder_x;
+    // int Start_j = (Pj < remainder_y) ? Pj * (quotient_y + 1) : Pj * quotient_y + remainder_y;
+    // int Start_k = (Pk < remainder_z) ? Pk * (quotient_z + 1) : Pk * quotient_z + remainder_z;
 
     double* lf = new double[lNx*lNy*lNz];
     for (int i = 0; i < lNx*lNy*lNz; i++){lf[i]=6;}
 
     localstate = std::make_unique<JacobiLocalState>(Nx, Ny, Nz, lNx, lNy, lNz, lf);
 
+    for (int i = 0; i < 6; i++){
+        if(neighbours_ranks[i] != MPI_PROC_NULL){
+            int plane_size = localstate->get_planesize(static_cast<Direction>(i));
+            send_buffers[i] = new double[plane_size]();
+            recv_buffers[i] = new double[plane_size]();
+        } 
+    }
     
-    // transfer_array = new double[lNy*lNz];
 }
 
 void MPISolver::solve(){
+
     int iterations = 0;
-    double residual = localstate->get_residual();
+    double residual = get_residual();
 
     while (residual > epsilon){
-        localstate->jacobi_step();
-        
+        MPI_Request requests[12];
+        int req_count = 0;
+
         for (int i = 0; i < 6; i++){
-            
+            if (neighbours_ranks[i] != MPI_PROC_NULL){
+                int buf_size = localstate->get_planesize(static_cast<Direction>(i));
+                MPI_Irecv(recv_buffers[i], buf_size, MPI_DOUBLE, neighbours_ranks[i], 0, gridcomm, &requests[req_count]);
+                req_count++;
+            }
+        }
+        for (int i = 0; i < 6; i++){
+            if (neighbours_ranks[i] != MPI_PROC_NULL){
+                Direction dir = static_cast<Direction>(i);
+                int buf_size = localstate->get_planesize(dir);
+                localstate->get_u_boundary(send_buffers[i], dir);
+                MPI_Isend(send_buffers[i], buf_size, MPI_DOUBLE, neighbours_ranks[i], 0, gridcomm, &requests[req_count]);
+                req_count++;
+            }
+        }
+        
+        localstate->jacobi_step();
+
+        MPI_Waitall(req_count, requests, MPI_STATUS_IGNORE);
+        for (int i = 0; i < 6; i++){
+            if (neighbours_ranks[i] != MPI_PROC_NULL){
+                Direction dir = static_cast<Direction>(i);
+                localstate->set_u_boundary(recv_buffers[i], dir);
+            }
+        }
+        residual = get_residual();
+        iterations++;
+    }
+    if (gridrank == 0) std::cout << "Converged in " << iterations << " iterations, residual: " << residual << std::endl;
+}
+
+MPISolver::~MPISolver(){
+    for (int i = 0; i < 6; i++){
+        if(neighbours_ranks[i] != MPI_PROC_NULL){
+            delete[] send_buffers[i];
+            delete[] recv_buffers[i];
         }
     }
+}
+
+double MPISolver::get_residual(){
+    double local_residual = localstate->get_residualsquared();
+    double residual_square_sum = 0;
+    MPI_Allreduce(&local_residual, &residual_square_sum, 1, MPI_DOUBLE, MPI_SUM, gridcomm);
+    return sqrt(residual_square_sum);
 }
