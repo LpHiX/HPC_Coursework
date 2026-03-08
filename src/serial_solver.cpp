@@ -6,6 +6,7 @@
 #include "serial_solver.h"
 #include <cmath>
 #include <iomanip>
+#include <fstream>
 #include <boost/timer/timer.hpp>
 
 SerialSolver::SerialSolver(int Nx, int Ny, int Nz, double epsilon): 
@@ -48,6 +49,31 @@ int SerialSolver::solve(){
 
 double SerialSolver::get_residual(){ return sqrt(localstate->get_residualsquared());}
 
-void SerialSolver::initialize_test(int test){
+void SerialSolver::initialize(int test){
     localstate->apply_test_conditions(test, 0, 0, 0);
+}
+void SerialSolver::initialize(std::string filename){
+    localstate->read_set_forcing(filename, 0, 0, 0);
+}
+
+void SerialSolver::write_solution(std::string filename){
+    std::ofstream fileOutput(filename, std::ios::out | std::ios::trunc);
+    fileOutput.precision(std::numeric_limits<double>::max_digits10);
+    fileOutput << Nx << " " << Ny << " " << Nz << std::endl;
+
+    double hx = 1.0 / (Nx - 1);
+    double hy = 1.0 / (Ny - 1);
+    double hz = 1.0 / (Nz - 1);
+
+    for (int k = 0; k < Nz; k++){
+        double z = k * hz;
+        for (int j = 0; j < Ny; j++){
+            double y = j * hy;
+            for (int i = 0; i < Nx; i++){
+                double x = i * hx;
+                fileOutput << x << " " << y << " " << z << " " << localstate->lu[localstate->uIndex(i,j,k)] << "\n";
+            }
+        }
+    }
+    fileOutput.close();
 }

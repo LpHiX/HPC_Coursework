@@ -4,6 +4,7 @@
  */
 #include "jacobi_localstate.h"
 #include <cmath>
+#include <fstream>
 
 
 
@@ -115,7 +116,7 @@ void JacobiLocalState::get_boundary_constants(Direction plane_dir, bool is_sendi
             jMul = 1;
             break;
         default:
-            throw "Not a possible direction";
+            throw std::runtime_error("Not a possible direction");
     }
     if (is_sending) offset += shift;
 }
@@ -165,12 +166,12 @@ void JacobiLocalState::apply_test_conditions(int test, int start_i, int start_j,
             break;
         case 2:
             loop([](double x, double y, double z){
-                return sin(M_PI * x) * sin(M_PI * y) * sin(M_PI * z);
+                return - 3 * M_PI * M_PI * sin(M_PI * x) * sin(M_PI * y) * sin(M_PI * z);
             });
             break;
         case 3:
             loop([](double x, double y, double z){
-                return sin(M_PI * x) * sin(4 * M_PI * y) * sin(8 * M_PI * z);
+                return - 81 * M_PI * M_PI * sin(M_PI * x) * sin(4 * M_PI * y) * sin(8 * M_PI * z);
             });
             break;
         case 4:
@@ -205,6 +206,44 @@ void JacobiLocalState::apply_test_conditions(int test, int start_i, int start_j,
                     }
                     
                  }
+            }
+        }
+    }
+}
+
+void JacobiLocalState::read_set_forcing(std::string filename, int start_i, int start_j, int start_k){
+    std::ifstream fileInput(filename);
+    if (!fileInput.good()){
+        throw std::runtime_error("Could not open forcing file");
+    }
+    int fileNx, fileNy, fileNz;
+    fileInput >> fileNx >> fileNy >> fileNz;
+
+    double x, y, z, f_value;
+    while (fileInput >> x >> y >> z >> f_value){
+        int global_i = (int)(x / hx + 0.5);
+        int global_j = (int)(y / hy + 0.5);
+        int global_k = (int)(z / hz + 0.5);
+
+        if (global_i < start_i + 1 || global_i > start_i + lnx) continue;
+        if (global_j < start_j + 1 || global_j > start_j + lny) continue;
+        if (global_k < start_k + 1 || global_k > start_k + lnz) continue;
+
+        int i = global_i - start_i;
+        int j = global_j - start_j;
+        int k = global_k - start_k;
+
+        
+        lf[u2rIndex(i,j,k)] = f_value;
+    }
+    fileInput.close();
+}
+
+void JacobiLocalState::pack_solution_u2(){
+    for (int k = 1; k < lNz-1; k++){
+        for (int j = 1; j < lNy-1; j++){
+            for (int i = 1; i < lNx-1; i++){
+                lu2[u2rIndex(i, j, k)] = lu[uIndex(i, j, k)];
             }
         }
     }

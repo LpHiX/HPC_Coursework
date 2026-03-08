@@ -5,6 +5,7 @@
 #pragma once
 #include <memory>
 #include "jacobi_localstate.h"
+#include <string>
 
 class SerialSolver{
 public:
@@ -23,8 +24,9 @@ public:
 
     int solve();
     double get_residual();
-    void initialize_test(int test);
+    void initialize(int test);
+    void initialize(std::string filename);
+    void write_solution(std::string filename);
 private:
-    double *u, *u2, *ddu, *f, *r;
     std::unique_ptr<JacobiLocalState> localstate;
 };

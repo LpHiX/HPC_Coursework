@@ -3,6 +3,7 @@
  * @author Martin Leung
  */
 #pragma once
+#include <string>
 
 enum Direction {
     POS_X,
@@ -33,5 +34,8 @@ public:
     void get_u_boundary(double *&plane, Direction plane_dir) const;
     void get_boundary_constants(Direction plane_dir, bool is_sending, int &offset, int &M, int &N, int &iMul, int &jMul) const;
     void apply_test_conditions(int test, int start_i, int start_j, int start_k);
+    void read_set_forcing(std::string filename, int start_i, int start_j, int start_k);
+    void pack_solution_u2();
+    // void write_solution(std::string filename) const;
 };
 
