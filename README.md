@@ -17,3 +17,5 @@ Add `-fopt-info-vec-missed` flag when I want to debug vectorization.
 8. write MPI tests
 9. rewrite serial to use MPI code
 10. add initializer to mpi
+
+Before I do anything more, this commit is to check if my branch worked.

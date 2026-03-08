@@ -11,6 +11,8 @@ namespace po = boost::program_options;
 #include "mpi_solver.h"
 #include <boost/timer/timer.hpp>
 #include <mpi.h>
+#include <memory>
+#include <fstream>
 
 int main(int argc, char *argv[])
 {
@@ -54,8 +56,7 @@ int main(int argc, char *argv[])
 
     std::string forcing;
 
-    // Not implemented yet:
-    // int test          = vm["test"].as<int>();
+    int test          = vm["test"].as<int>();
     const double epsilon    = vm["epsilon"].as<double>();
 
     int Nx = vm["Nx"].as<int>();
@@ -73,32 +74,42 @@ int main(int argc, char *argv[])
         MPI_Finalize();
         return 1;
     }
-
-
-
-    // double *f = nullptr;
-
     if (vm.count("forcing"))
     {
-        // if (vm.count("test")){
-        //     std::cout << "Can't have both --forcing and --test at the same time" << std::endl;
-        //     return 1;
-        // }
+        if (!vm["test"].defaulted()){
+            std::cout << "Can't have both --forcing and --test at the same time" << std::endl;
+            MPI_Finalize();
+            return 1;
+        }
 
         forcing = vm["forcing"].as<std::string>();
-        // read_forcing(forcing, Nx, Ny, Nz, f);
-        // test = 0;
+        test = 0;
+
+        std::ifstream fileInput(forcing);
+        if (!fileInput.good()) {
+            if (rank == 0) std::cout << "Error opening forcing file." << std::endl;
+            MPI_Finalize();
+            return 1;
+        }
+        fileInput >> Nx >> Ny >> Nz;
+        fileInput.close();
     }
+    std::unique_ptr<boost::timer::auto_cpu_timer> timer;
+
+    
 
     if (rank == 0){
-        boost::timer::auto_cpu_timer t;
-        MPISolver solver(Nx, Ny, Nz, Px, Py, Pz, epsilon);
-        solver.solve();
-    } else{
-        MPISolver solver(Nx, Ny, Nz, Px, Py, Pz, epsilon);
-        solver.solve();
+        timer = std::make_unique<boost::timer::auto_cpu_timer>();
     }
 
+    MPISolver solver(Nx, Ny, Nz, Px, Py, Pz, epsilon);
+    if (test != 0){
+        solver.initialize(test);
+    } else {
+        solver.initialize(forcing);
+    }
+    solver.solve();
+    solver.write_solution("solution.txt", test);
 
 
     MPI_Finalize();

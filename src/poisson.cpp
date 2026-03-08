@@ -8,8 +8,8 @@
 namespace po = boost::program_options;
 
 #include "serial_solver.h"
-#include "filemanager.h"
 #include <boost/timer/timer.hpp>
+#include <fstream>
 
 
 int main(int argc, char* argv[]){
@@ -43,23 +43,36 @@ int main(int argc, char* argv[]){
     int Ny            = vm["Ny"].as<int>();
     int Nz            = vm["Nz"].as<int>();
 
-    double* f = nullptr;
-
     if (vm.count("forcing")){
-        // if (vm.count("test")){
-        //     std::cout << "Can't have both --forcing and --test at the same time" << std::endl;
-        //     return 1;
-        // }
-
-
+        if (!vm["test"].defaulted()){
+            std::cout << "Can't have both --forcing and --test at the same time" << std::endl;
+            return 1;
+        }
         forcing = vm["forcing"].as<std::string>();
-        read_forcing(forcing, Nx, Ny, Nz, f);
         test = 0;
+
+        std::ifstream fileInput(forcing);
+        if (!fileInput.good()) {
+            std::cout << "Error opening forcing file." << std::endl;
+            return 1;
+        }
+        fileInput >> Nx >> Ny >> Nz;
+        fileInput.close();
+    }
+    if (test < 0 || test > 5){
+        throw std::runtime_error("(--test " + std::to_string(test) + ") not defined");
     }
     // write_sample_forcing(32, 32, 32, "testcase2forcing.txt");
 
-    SerialSolver ss = SerialSolver(Nx, Ny, Nz, test, epsilon, f);
-    ss.run_solver();
+    SerialSolver ss = SerialSolver(Nx, Ny, Nz, epsilon);
+    if (test != 0){
+        ss.initialize(test);
+    } else {
+        ss.initialize(forcing);
+    }
+    ss.solve();
+    ss.write_solution("solution.txt");
+
     // write_solution(ss, "solution.txt");
 
     // std::cout << "Residual: " << ss.get_residual() << std::endl;

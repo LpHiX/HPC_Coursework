@@ -12,7 +12,7 @@
 
 class MPISolver{
 public:
-    const int Nx, Ny, Nz, Px, Py, Pz;
+    const int Nx, Ny, Nz, nx, ny, nz, Px, Py, Pz;
     const double epsilon;
 
     MPISolver(int Nx, int Ny, int Nz, int Px, int Py, int Pz, double epsilon);
@@ -20,8 +20,12 @@ public:
     ~MPISolver();
 
     void solve();
-    double get_residual();
+    void initialize(int test);
+    void initialize(std::string filename);
+    void write_solution(std::string filename, int test);
+    double get_residual() const;
 private:
+    int lNx, lNy, lNz, lnx, lny, lnz;
     MPI_Comm gridcomm;
     int gridrank;
     int neighbours_ranks[6];
@@ -30,6 +34,7 @@ private:
     std::unique_ptr<JacobiLocalState> localstate;
 
     // void exchange();
+    int start_i, start_j, start_k;
 };
 
 inline std::string DirectionNames[6] = {"POS_X","NEG_X","POS_Y","NEG_Y","POS_Z","NEG_Z"};
